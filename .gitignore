@@ -1,8 +1,9 @@
-/custom_mae
 /mae_facebook
 /mae_hf
 /transformers
 /segmentation
+
+/custom_mae/Reconstruction_HuggingFace_Finetuning_Models
 
 *.pth
 *.bin

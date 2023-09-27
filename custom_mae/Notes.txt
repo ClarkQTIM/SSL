@@ -1,0 +1,43 @@
+VitMAE from HuggingFace:
+
+Pretrained:
+https://huggingface.co/docs/transformers/main/en/model_doc/vit_mae#transformers.ViTMAEForPreTraining
+
+Classification:
+https://huggingface.co/docs/transformers/main/en/model_doc/vit#transformers.ViTForImageClassification
+
+
+8/16: Steps taken:
+git clone git@github.com:huggingface/transformers.git
+cd transformers
+pip install -e '.[dev]'
+
+Command to fine-tune:
+python /projects/Cervical_Cancer_Projects/SSL/mae_hf/run_mae.py \
+    --model_name_or_path "facebook/vit-mae-base" \
+    --train_dir /projects/Cervical_Cancer_Projects/data/full_dataset_duke_liger_itoju_5StLowQual \
+    --output_dir /projects/Cervical_Cancer_Projects/SSL/hf_mae/outputs_8_16 \
+    --remove_unused_columns False \
+    --label_names pixel_values \
+    --do_train \
+    --do_eval
+
+Note that when we tried to do '--model_name_or_path /projects/Cervical_Cancer_Projects/SSL/hf_mae/mae_visualize_vit_large_ganloss.pth'
+it told me that I did not have a proper config file. So, I need to figure that out...
+
+We added the utils and the models_mae.py to this directory.
+
+9/22 Meeting with Jayashree about what comes next:
+
+Finish up the classifier head on the ViTMAE. 
+Step 1: Make sure I get EXACTLY the same results as Rakin on the diagnostic classifier (we have already explored this, but make sure).
+Step 2: Take the ViTMAE pretrained (not on cervices) as the foundational model and train a diagnostic classifier
+Step 3: Do step 2 with the fine-tuned on cerivcal data and compare all three.
+Step 4: Create a plot where the x axis is the percentage of training dataset and all the three plots. 
+NOTE! I NEED TO CONVERT THE PNGS TO NUMPY ARRAYS AND SAVE THEM TO PUT THEM ON ALPINE
+
+Step 5: Generalizability. We have 5 or 10 different cameras in the dataset. We have seen that training on one and testing on others doesn't work. 
+We have two datasets, one with diagnostic labels and one without. 
+First fine-tune ViTMAE on both datasets and then use it as a classifier for the new dataset with labels. Do the same step as Step 4. 
+Rakin showed that it did not do well on the new dataset unless you began adding some of the labeled data. 
+

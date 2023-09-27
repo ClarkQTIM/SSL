@@ -1,0 +1,1 @@
+{"Dataset": "/projects/Cervical_Cancer_Projects/data/full_dataset_duke_liger_itoju_5StLowQual", "from_pretrained_model": "facebook/vit-mae-base", "model_checkpoint": "None", "model_arch": "None", "Means": "None", "Std_Devs": "None", "Size": "None", "Batch_Size": 32, "Base_Device": "cuda:0", "Average_Loss": 0.11400000005960464}

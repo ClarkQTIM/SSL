@@ -1,0 +1,1 @@
+{"Dataset": "/projects/Cervical_Cancer_Projects/SSL/custom_mae/csvs/all_fundus_images.csv", "from_pretrained_model": "facebook/vit-mae-huge", "model_checkpoint": null, "model_arch": null, "Means": "None", "Std_Devs": "None", "Size": null, "Batch_Size": 32, "Base_Device": "cuda:0", "Average_Loss": 0.01600000075995922}

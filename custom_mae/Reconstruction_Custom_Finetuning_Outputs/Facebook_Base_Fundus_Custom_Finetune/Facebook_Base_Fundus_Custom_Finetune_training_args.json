@@ -1,0 +1,1 @@
+{"Dataset": "/sddata/projects/SSL/custom_mae/csvs/all_fundus_images.csv", "Image_Column": "Image", "Model_Type": "facebook/vit-mae-base", "Model_Arch": "None", "Checkpoint": "None", "Batch_Size": 16, "Epochs": 50, "Learning_Rate": 6.25e-05, "Scheduler": "None", "Val_Pct": 0.15, "Seed": 0}
