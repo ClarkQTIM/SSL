@@ -1,0 +1,10 @@
+pandas
+matplotlib
+Pillow
+torch
+tslearn
+monai
+timm
+transformers
+# apt-get update && apt-get install python3-opencv Needed for opencv-python
+opencv-python

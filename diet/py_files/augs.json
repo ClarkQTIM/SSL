@@ -1,0 +1,9 @@
+{
+    "resize": false,
+    "random_flip_x": false,
+    "random_flip_y": false,
+    "random_resize_crop": false,
+    "random_rotation": false,
+    "color_jitter": false,
+    "gaussian_blur": false
+}

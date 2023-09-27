@@ -1,0 +1,9 @@
+/custom_mae
+/mae_facebook
+/mae_hf
+/transformers
+/segmentation
+
+*.pth
+*.bin
+__pycache__/

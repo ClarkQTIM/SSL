@@ -1,0 +1,1 @@
+{"Model_type": "res18", "Model Checkpoint": "None", "Augmentations": [], "Epochs": 50, "Learning Rate": 0.001, "Scheduler": "cosineannealing", "Batch_Size": 64}
