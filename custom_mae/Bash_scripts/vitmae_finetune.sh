@@ -18,8 +18,8 @@ BATCH=16
 EPOCHS=50
 LR=6.25e-05
 VIS=5
-SAVE_DIR=/sddata/projects/SSL/custom_mae/Reconstruction_Custom_Finetuning_Outputs/Facebook_Huge_Cervix_Custom_Finetune/
-TITLE=Facebook_Huge_Cervix_Custom_Finetune
+SAVE_DIR=/sddata/projects/SSL/custom_mae/Reconstruction_Custom_Finetuning_Outputs/Facebook_Huge_Cervix_Custom_Finetune_v2/
+TITLE=Facebook_Huge_Cervix_Custom_Finetune_v2
 GPUS=1
 SEED=0
 

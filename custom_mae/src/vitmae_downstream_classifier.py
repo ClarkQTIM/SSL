@@ -81,6 +81,7 @@ if __name__ == '__main__':
     prepared_dataset = transform_dataset(dataset, feat_extract_transform)
     train_ds = prepared_dataset['train']
     val_ds = prepared_dataset['val']
+    print(f'We have {len(train_ds)} training examples and {len(val_ds)} validation ones.')
     train_dataloader = DataLoader(train_ds, batch_size = batch_size, shuffle = False)
     val_dataloader = DataLoader(val_ds, batch_size = batch_size, shuffle = False)
 

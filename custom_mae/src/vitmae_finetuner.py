@@ -62,6 +62,9 @@ if __name__ == '__main__':
         print('We are loading a model from from_pretrained.')
         prepared_dataset, valid_image_paths = prepare_dataset_from_dir_parallel(data_dir, col, feature_extractor, None, None, None, None)
 
+    '''
+    Is there a faster way to make this prepared dataset? Look at how you do it in the other one
+    '''
     train_ds, val_ds = data_division(prepared_dataset, args.val_pct, args.seed)
     train_dataloader = DataLoader([prepped_data.squeeze(0) for prepped_data in train_ds], batch_size = batch_size, shuffle = False)
     val_dataloader = DataLoader([prepped_data.squeeze(0) for prepped_data in val_ds], batch_size = batch_size, shuffle = False)

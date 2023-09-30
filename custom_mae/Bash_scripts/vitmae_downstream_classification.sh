@@ -17,11 +17,11 @@ IMAGE_COL=MASKED_IMG_ID
 LABEL_COL=CC_ST
 VAL_PCT=0
 BATCH=16
-EPOCHS=5
+EPOCHS=25
 LR=6.25e-05
 VIS=5
 SAVE_DIR=/sddata/projects/SSL/custom_mae/Downstream_Classification_Finetuning_Outputs/Facebook_Huge_Unfinetuned_v2/
-TITLE=Facebook_Huge_Unfinetuned_Downstream_Classification_v2
+TITLE=Facebook_Huge_Unfinetuned_v2
 GPUS=0
 SEED=0
 

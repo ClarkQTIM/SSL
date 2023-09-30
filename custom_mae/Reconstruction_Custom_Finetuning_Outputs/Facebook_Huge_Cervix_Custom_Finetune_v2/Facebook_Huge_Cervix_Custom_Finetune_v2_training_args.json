@@ -1,0 +1,1 @@
+{"Dataset": "/sddata/projects/Cervical_Cancer_Projects/data/full_dataset_duke_liger_itoju_5StLowQual", "Image_Column": "Image", "Model_Type": "facebook/vit-mae-huge", "Model_Arch": "None", "Checkpoint": "None", "Batch_Size": 16, "Epochs": 50, "Learning_Rate": 6.25e-05, "Scheduler": "None", "Val_Pct": 0.15, "Seed": 0}

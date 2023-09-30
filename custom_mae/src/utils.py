@@ -116,13 +116,15 @@ def process_image(image_path, feature_extractor, img_size, means, stand_devs):
                 try:
                     pixel_values = feature_extractor(image, return_tensors="pt").pixel_values
                 except:
-                    print(image_path)
+                    print(f'Feature extractor failed on this image {image_path}')
+                    return None, None
             else:
                 pixel_values = feature_extraction_single_image_from_given_params(image_path, img_size, means, stand_devs)
                 pixel_values = torch.tensor(pixel_values).to(torch.float32)
                 pixel_values = pixel_values.unsqueeze(dim=0)
                 pixel_values = torch.einsum('nhwc->nchw', pixel_values)
-            return pixel_values, image_path
+
+                return pixel_values, image_path
         else:
             return None, None
     except (PIL.UnidentifiedImageError, OSError) as e:
@@ -201,13 +203,13 @@ def prepare_ds_from_csv_and_image_dir(image_dir, csv_path, image_col, label_col)
     val_df = ds_df[ds_df['dataset'] == 'val']
 
     # Extract the 'image' column from each DataFrame to get lists of image names
-    image_paths_train = train_df[image_col].tolist()[:500]
+    image_paths_train = train_df[image_col].tolist()
     image_paths_train = [os.path.join(image_dir, name) for name in image_paths_train]
-    label_paths_train = train_df[label_col].tolist()[:500]
+    label_paths_train = train_df[label_col].tolist()
 
-    image_paths_validation = val_df[image_col].tolist()[-100:]
+    image_paths_validation = val_df[image_col].tolist()
     image_paths_validation = [os.path.join(image_dir, name) for name in image_paths_validation]
-    label_paths_validation = val_df[label_col].tolist()[-100:]
+    label_paths_validation = val_df[label_col].tolist()
 
     # step 1: create Dataset objects
     train_dataset = create_dataset(image_paths_train, label_paths_train)
