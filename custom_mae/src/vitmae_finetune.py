@@ -67,7 +67,7 @@ class Train:
                 ## Stepping through the batches
                 for batch_data in self.train_dataloader: # Ranging over the batches
                     step += 1 # Counting the batches
-                    input = batch_data
+                    input = batch_data['pixel_values']
                     optimizer.zero_grad() # Zeroing out the optimizer gradients
 
                     if self.mask_ratio != None:
@@ -103,7 +103,7 @@ class Train:
 
                         for batch_data in self.val_dataloader: # Running through the validation dataset batches
                             val_step += 1 # Counting the batches
-                            val_input = batch_data
+                            val_input = batch_data['pixel_values']
 
                             if self.mask_ratio != None:
                                 loss, y, mask = self.model(val_input.to(self.base_device), mask_ratio=self.mask_ratio)

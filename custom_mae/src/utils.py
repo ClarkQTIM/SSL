@@ -19,6 +19,7 @@ import transformers
 from transformers import ViTFeatureExtractor, ViTMAEForPreTraining, ViTForImageClassification
 from monai.data import DataLoader
 from datasets import Dataset, DatasetDict, Image
+from torch.utils.data import random_split
 
 # Python Scripts
 import models_mae
@@ -94,105 +95,90 @@ def load_vitmae_from_from_pretrained_w_weights(from_pretrained_model_path, weigh
 
 # Data preparation
 
-def feature_extraction_single_image_from_given_params(img_path, img_size, means, stand_devs):
+def create_dataset_image_label(image_paths, label_paths):
+        
+    valid_image_paths = []
+    valid_label_paths = []
 
-    img = PImage.open(img_path)
-    img = img.resize((img_size, img_size))
-    img = np.array(img) / 255.
+    for i in range(len(image_paths)): # Sometimes the images paths don't open, so we need to weed those out
+        try:
+            img = PImage.open(image_paths[i])
+            img.verify()
+            img.close()  # Close the image to release resources
+            valid_image_paths.append(image_paths[i])
+            valid_label_paths.append(label_paths[i])
+        except Exception as e:
+            print(f"Error opening image '{image_paths[i]}': {e}")
 
-    assert img.shape == (img_size, img_size, 3)
+    dataset = Dataset.from_dict({"image": sorted(valid_image_paths),
+                                "label": sorted(valid_label_paths)})
+    dataset = dataset.cast_column("image", Image())
+    # dataset = dataset.cast_column("label", torch.int32) # Do we need this? I don't think so.
 
-    # normalize by ImageNet mean and std
-    img = img - means
-    img = img / stand_devs
+    return dataset
 
-    return img
+def create_dataset_image_only(image_paths):
+    valid_image_paths = []
 
-def process_image(image_path, feature_extractor, img_size, means, stand_devs):
-    try:
-        if image_path.lower().endswith((".jpg", ".jpeg", ".png", ".bmp", ".gif", ".tif")):
-            if feature_extractor is not None:
-                image = PImage.open(image_path)
-                try:
-                    pixel_values = feature_extractor(image, return_tensors="pt").pixel_values
-                except:
-                    print(f'Feature extractor failed on this image {image_path}')
-                    return None, None
-            else:
-                pixel_values = feature_extraction_single_image_from_given_params(image_path, img_size, means, stand_devs)
-                pixel_values = torch.tensor(pixel_values).to(torch.float32)
-                pixel_values = pixel_values.unsqueeze(dim=0)
-                pixel_values = torch.einsum('nhwc->nchw', pixel_values)
+    for image_path in image_paths:
+        try:
+            img = PImage.open(image_path)
+            img.verify()  # Check for image validity without fully loading it
+            img.close()    # Close the image to release resources
+            valid_image_paths.append(image_path)
+        except Exception as e:
+            print(f"Error opening/verifying image '{image_path}': {e}")
 
-                return pixel_values, image_path
-        else:
-            return None, None
-    except (PIL.UnidentifiedImageError, OSError) as e:
-        print(f"Error processing {image_path}: {e}")
-        return None, None
+    dataset = Dataset.from_dict({"image": sorted(valid_image_paths)})
+    dataset = dataset.cast_column("image", Image())
 
-def prepare_dataset_from_dir_parallel(data_location, image_column, feature_extractor, img_size, means, stand_devs, num_rand_images):
+    return dataset
+
+def prepare_dataset_reconstruction(data_location, image_col, val_pct, num_rand_images):
+
+    '''
+    In this function, we don't have dedicated train and val sets, but are going to use ALL the data we can, either from a csv or 
+    from a directory.
+    '''
 
     if '.csv' not in data_location:
         all_images = os.listdir(data_location)
         all_images = [os.path.join(data_location, image) for image in all_images]
     else:
-        all_images = list(pd.read_csv(data_location)[image_column])
+        all_images = list(pd.read_csv(data_location)[image_col])
 
     if num_rand_images is not None:
         all_images = random.sample(all_images, num_rand_images)
 
-    valid_results = []
+    dataset_size = len(all_images)
+    val_size = int(val_pct * dataset_size)
+    train_size = dataset_size - val_size
 
-    with concurrent.futures.ThreadPoolExecutor() as executor:
-        futures = [executor.submit(process_image, image_path, feature_extractor, img_size, means, stand_devs) for image_path in all_images]
+    image_paths_train, image_paths_validation = random_split(all_images, [train_size, val_size])
 
-        for future in concurrent.futures.as_completed(futures):
-            result = future.result()
-            if result[0] is not None:
-                valid_results.append(result)
+    # step 1: create Dataset objects
+    train_dataset = create_dataset_image_only(image_paths_train)
+    validation_dataset = create_dataset_image_only(image_paths_validation)
 
-    # Separate pixel values and image paths
-    dataset_pixel_values, valid_image_paths = zip(*valid_results)
+    # step 2: create DatasetDict
+    dataset = DatasetDict({
+        "train": train_dataset,
+        "val": validation_dataset,
+    }
+    )
 
-    print(f'There are {len(dataset_pixel_values)} images. Example of an image path: {all_images[0]}')
-
-    return list(dataset_pixel_values), list(valid_image_paths)
-
-def data_division(data, val_pct, sd):
-
-    data_list_copy = data.copy()  # Create a copy of the original list
-
-    # Set the random seed for reproducibility (optional)
-    random.seed(sd)
-
-    # Define the percentage of data to be used for validation (e.g., 20%)
-    validation_split = val_pct
-
-    # Calculate the number of samples for the validation set
-    num_samples = len(data_list_copy)
-    num_validation_samples = int(validation_split * num_samples)
-
-    # Randomly shuffle the data
-    random.shuffle(data_list_copy)
-
-    # Split the data into training and validation sets
-    validation_data = data_list_copy[:num_validation_samples]
-    train_data = data_list_copy[num_validation_samples:]
-
-    return train_data, validation_data
+    return dataset
 
 # Organize dataset from csv and data path
 
-def create_dataset(image_paths, label_paths):
-        dataset = Dataset.from_dict({"image": sorted(image_paths),
-                                    "label": sorted(label_paths)})
-        dataset = dataset.cast_column("image", Image())
-        # dataset = dataset.cast_column("label", torch.int32)
-
-        return dataset
-
 def prepare_ds_from_csv_and_image_dir(image_dir, csv_path, image_col, label_col):
+
+    '''
+    This function is for when we have a csv with images and labels and where the images are the image names only, not the full paths.
+    (like Rakin's splits_df.csv for the diagnostic classifier).
+
+    10/2: Add in when you get the chance a train and val splitting portion in case we don't have them already.
+    '''
 
     ds_df = pd.read_csv(csv_path)
 
@@ -204,16 +190,19 @@ def prepare_ds_from_csv_and_image_dir(image_dir, csv_path, image_col, label_col)
 
     # Extract the 'image' column from each DataFrame to get lists of image names
     image_paths_train = train_df[image_col].tolist()
-    image_paths_train = [os.path.join(image_dir, name) for name in image_paths_train]
     label_paths_train = train_df[label_col].tolist()
 
+    if image_dir != 'None':
+        image_paths_train = [os.path.join(image_dir, name) for name in image_paths_train]
+
     image_paths_validation = val_df[image_col].tolist()
-    image_paths_validation = [os.path.join(image_dir, name) for name in image_paths_validation]
     label_paths_validation = val_df[label_col].tolist()
+    if image_dir != 'None':
+        image_paths_validation = [os.path.join(image_dir, name) for name in image_paths_validation]
 
     # step 1: create Dataset objects
-    train_dataset = create_dataset(image_paths_train, label_paths_train)
-    validation_dataset = create_dataset(image_paths_validation, label_paths_validation)
+    train_dataset = create_dataset_image_label(image_paths_train, label_paths_train)
+    validation_dataset = create_dataset_image_label(image_paths_validation, label_paths_validation)
 
     # step 2: create DatasetDict
     dataset = DatasetDict({
@@ -224,41 +213,31 @@ def prepare_ds_from_csv_and_image_dir(image_dir, csv_path, image_col, label_col)
 
     return dataset
 
-# def feat_extract_transform(example_batch, feature_extractor):
-#     # Take a list of PIL images and turn them to pixel values
-#     inputs = feature_extractor([x for x in example_batch['image']], return_tensors='pt') # The same as above, but for everything in the batch
-
-#     # Don't forget to include the labels!
-#     inputs['label'] = example_batch['label']
-
-#     return inputs
-
 def transform_dataset(dataset, transformation):
 
     prepared_ds = dataset.with_transform(transformation)
 
     return prepared_ds
 
-# Loss Over Dataset
+# Loss Over Dataset (Also in /sddata/projects/SSL/custom_mae/src/vitmae_loss_over_dataset.py)
 
-def calculate_average_loss_over_dataset(model, prepared_dataset, batch_size):
-
-    dataloader = DataLoader([prepped_data.squeeze(0) for prepped_data in prepared_dataset], batch_size = batch_size, shuffle = False)
-    # Note that we remove the extra batch dimension created during processing these, as we are creating new batches
+def calculate_average_loss_over_dataset(model, base_device, train_dataloader):
 
     overall_loss = 0
 
-    for batch in dataloader:
+    for batch in train_dataloader:
 
-        outputs = model(batch)
+        input = batch['pixel_values']
+
+        outputs = model(input.to(base_device))
         try:
             loss_on_batch = outputs['loss']
         except:
             loss_on_batch = outputs[0]
 
-        overall_loss += loss_on_batch
+        overall_loss += loss_on_batch.detach().cpu()
 
-    return overall_loss/len(dataloader)
+    return overall_loss/len(train_dataloader)
 
 # Visualization
 
@@ -338,4 +317,73 @@ def visualize(epoch, pixel_values, model, feature_extractor, show, save, dir_to_
         else:
 
             plt.savefig(os.path.join(dir_to_save, title + '_visualization.png'))
+
+########
+# Legacy
+########
+
+
+# def process_image(image_path, feature_extractor, img_size, means, stand_devs):
+#     try:
+#         if image_path.lower().endswith((".jpg", ".jpeg", ".png", ".bmp", ".gif", ".tif")):
+#             if feature_extractor is not None:
+#                 image = PImage.open(image_path)
+#                 try:
+#                     pixel_values = feature_extractor(image, return_tensors="pt").pixel_values
+#                 except:
+#                     print(f'Feature extractor failed on this image {image_path}')
+#                     return None, None
+#             else:
+#                 pixel_values = feature_extraction_single_image_from_given_params(image_path, img_size, means, stand_devs)
+#                 pixel_values = torch.tensor(pixel_values).to(torch.float32)
+#                 pixel_values = pixel_values.unsqueeze(dim=0)
+#                 pixel_values = torch.einsum('nhwc->nchw', pixel_values)
+
+#                 return pixel_values, image_path
+#         else:
+#             return None, None
+#     except (PIL.UnidentifiedImageError, OSError) as e:
+#         print(f"Error processing {image_path}: {e}")
+#         return None, None
+
+# def prepare_dataset_from_dir_parallel(data_location, image_column, feature_extractor, img_size, means, stand_devs, num_rand_images):
+
+#     if '.csv' not in data_location:
+#         all_images = os.listdir(data_location)
+#         all_images = [os.path.join(data_location, image) for image in all_images]
+#     else:
+#         all_images = list(pd.read_csv(data_location)[image_column])
+
+#     if num_rand_images is not None:
+#         all_images = random.sample(all_images, num_rand_images)
+
+#     valid_results = []
+
+#     with concurrent.futures.ThreadPoolExecutor() as executor:
+#         futures = [executor.submit(process_image, image_path, feature_extractor, img_size, means, stand_devs) for image_path in all_images]
+
+#         for future in concurrent.futures.as_completed(futures):
+#             result = future.result()
+#             if result[0] is not None:
+#                 valid_results.append(result)
+
+#     # Separate pixel values and image paths
+#     dataset_pixel_values, valid_image_paths = zip(*valid_results)
+
+#     print(f'There are {len(dataset_pixel_values)} images. Example of an image path: {all_images[0]}')
+
+#     return list(dataset_pixel_values), list(valid_image_paths)
+
+# def feat_extract_transform(example_batch, feature_extractor):
+
+    '''
+    Technically, we need to define this after creating the feature extractor, but we will keep the template here.
+    '''
+#     # Take a list of PIL images and turn them to pixel values
+#     inputs = feature_extractor([x for x in example_batch['image']], return_tensors='pt') # The same as above, but for everything in the batch
+
+#     # Don't forget to include the labels if we need them!
+#     inputs['label'] = example_batch['label']
+
+#     return inputs
 

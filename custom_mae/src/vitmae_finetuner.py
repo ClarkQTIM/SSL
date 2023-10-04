@@ -6,6 +6,8 @@
 import argparse
 import json
 import sys
+from PIL import ImageFile
+ImageFile.LOAD_TRUNCATED_IMAGES = True # Issues with some images 'OSError: image file is truncated (n bytes not processed)'
 
 # DL
 import torch
@@ -48,27 +50,35 @@ if __name__ == '__main__':
     batch_size = args.batch_size
     col = args.col
 
-    try:
-        model = load_vitmae_from_arch_weights(args.model_arch, args.model_checkpt)
-        print('We are loading a model from an architecture and model weights.')
-        means = np.array([float(x) for x in args.means.split('_')])
-        stand_devs = np.array([float(x) for x in args.stand_devs.split('_')])
-        size = args.size
-        prepared_dataset, valid_image_paths = prepare_dataset_from_dir_parallel(data_dir, col, None, size, means, stand_devs, None)
-        feature_extractor = (means, stand_devs)
+    from_pretrained_model = args.model_type
+    model_checkpoint = None
+    model_arch = args.model_arch
 
-    except:
-        feature_extractor, model = load_vitmae_from_from_pretrained(args.model_type, True, False, None)
-        print('We are loading a model from from_pretrained.')
-        prepared_dataset, valid_image_paths = prepare_dataset_from_dir_parallel(data_dir, col, feature_extractor, None, None, None, None)
+    num_rand_images = None
 
-    '''
-    Is there a faster way to make this prepared dataset? Look at how you do it in the other one
-    '''
-    train_ds, val_ds = data_division(prepared_dataset, args.val_pct, args.seed)
-    train_dataloader = DataLoader([prepped_data.squeeze(0) for prepped_data in train_ds], batch_size = batch_size, shuffle = False)
-    val_dataloader = DataLoader([prepped_data.squeeze(0) for prepped_data in val_ds], batch_size = batch_size, shuffle = False)
-    
+    if from_pretrained_model != None and model_checkpoint == None:
+        print('We are loading in the model with from_pretrained.')
+
+        feature_extractor, model = load_vitmae_from_from_pretrained(from_pretrained_model, True, False, None)
+        dataset = prepare_dataset_reconstruction(data_dir, col, args.val_pct, num_rand_images)
+
+    else:
+        print('Issue loading in model for fine-tuning. Check arguments')
+        sys.exit()
+
+    def feat_extract_transform(example_batch):
+        # Take a list of PIL images and turn them to pixel values
+        inputs = feature_extractor([x for x in example_batch['image']], return_tensors='pt') # The same as above, but for everything in the batch
+
+        return inputs
+
+    prepared_dataset = transform_dataset(dataset, feat_extract_transform)
+    train_ds = prepared_dataset['train']
+    val_ds = prepared_dataset['val']
+    print(f'We have {len(train_ds)} training examples and {len(val_ds)} validation ones.')
+    train_dataloader = DataLoader(train_ds, batch_size = batch_size, shuffle = False)
+    val_dataloader = DataLoader(val_ds, batch_size = batch_size, shuffle = False)
+
     # Devices
     base_device = configure_devices(model, args.gpus)
 
@@ -85,7 +95,7 @@ if __name__ == '__main__':
         "Batch_Size": args.batch_size,
         "Epochs": args.epochs,
         "Learning_Rate": args.learning_rate,
-        "Scheduler": 'None',
+        "Scheduler": 'LinearLR', # Hardcoded for now
         "Val_Pct": args.val_pct,
         "Seed": args.seed
     }

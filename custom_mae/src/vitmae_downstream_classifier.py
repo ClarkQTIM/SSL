@@ -47,7 +47,7 @@ if __name__ == '__main__':
     batch_size = args.batch_size
 
     from_pretrained_model = args.model_type
-    model_checkpoint = None
+    model_checkpoint = args.model_checkpt
     model_arch = args.model_arch
 
     if from_pretrained_model != None and model_checkpoint == None:
