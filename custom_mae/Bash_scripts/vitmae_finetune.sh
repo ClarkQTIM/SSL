@@ -1,9 +1,9 @@
 MODEL_TYPE=facebook/vit-mae-huge
 # MODEL_TYPE=None
 MODEL_ARCH=None
-MODEL_CHECKPOINT=None
+# MODEL_CHECKPOINT=None
 # MODEL_ARCH=mae_vit_large_patch16
-# MODEL_CHECKPOINT=/projects/Cervical_Cancer_Projects/SSL/mae_facebook/demo/mae_visualize_vit_large_ganloss.pth
+MODEL_CHECKPOINT=/sddata/projects/SSL/custom_mae/Reconstruction_Custom_Finetuning_Best_Models/Facebook_Huge_Cervix_Custom_Finetune_v2_best_epoch.pth
 # MEANS=0.485_0.456_0.406
 # STAND_DEVS=0.229_0.224_0.225
 # SIZE=224
@@ -18,8 +18,8 @@ BATCH=16
 EPOCHS=25
 LR=6.25e-05
 VIS=5
-SAVE_DIR=/sddata/projects/SSL/custom_mae/Reconstruction_Custom_Finetuning_Outputs/Facebook_Huge_Cervix_Custom_Finetune_v2/
-TITLE=Facebook_Huge_Cervix_Custom_Finetune_v2
+SAVE_DIR=/sddata/projects/SSL/custom_mae/Reconstruction_Custom_Finetuning_Outputs/Facebook_Huge_Cervix_Custom_Finetune_v2_Cont/
+TITLE=Facebook_Huge_Cervix_Custom_Finetune_v2_Cont
 GPUS=1
 SEED=0
 

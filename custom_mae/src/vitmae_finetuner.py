@@ -51,7 +51,7 @@ if __name__ == '__main__':
     col = args.col
 
     from_pretrained_model = args.model_type
-    model_checkpoint = None
+    model_checkpoint = args.model_checkpt
     model_arch = args.model_arch
 
     num_rand_images = None
@@ -60,6 +60,11 @@ if __name__ == '__main__':
         print('We are loading in the model with from_pretrained.')
 
         feature_extractor, model = load_vitmae_from_from_pretrained(from_pretrained_model, True, False, None)
+        dataset = prepare_dataset_reconstruction(data_dir, col, args.val_pct, num_rand_images)
+
+    elif from_pretrained_model != None and model_checkpoint != None:
+        print('We are loading in the model with from_pretrained and the swapping out the weights.')
+        feature_extractor, model = load_vitmae_from_from_pretrained_w_weights(from_pretrained_model, model_checkpoint, True, False, None)
         dataset = prepare_dataset_reconstruction(data_dir, col, args.val_pct, num_rand_images)
 
     else:

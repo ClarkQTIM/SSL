@@ -71,13 +71,13 @@ if __name__ == "__main__":
     col = None
 
     from_pretrained_model = "facebook/vit-mae-huge"
-    model_checkpoint = '/sddata/projects/SSL/custom_mae/Reconstruction_Custom_Finetuning_Best_Models/Facebook_Huge_Cervix_Custom_Finetune_v2_best_epoch.pth'
+    model_checkpoint = '/sddata/projects/SSL/custom_mae/Reconstruction_Custom_Finetuning_Best_Models/Facebook_Huge_Cervix_Custom_Finetune_v2_Cont_best_epoch.pth'
     # model_checkpoint =  '/sddata/projects/SSL/custom_mae/Reconstruction_Custom_Finetuning_Best_Models/Facebook_Huge_Cropped_Fundus_Custom_Finetune_best_epoch.pth'
     # model_arch = 'mae_vit_large_patch16'
     # model_checkpoint = None
     model_arch = None
     batch_size = 32
-    title = 'Facebook_Huge_Finetuned_v2_full_dataset_duke_liger_itoju_5StLowQual_Average_Loss_loss'
+    title = 'Facebook_Huge_Finetuned_v2_Cont_full_dataset_duke_liger_itoju_5StLowQual_Average_Loss_loss'
     # title = 'testing'
     dir_to_save = '/sddata/projects/SSL/custom_mae/Reconstruction_Dataset_Losses'
     gpus = ['0']
