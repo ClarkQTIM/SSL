@@ -84,12 +84,24 @@ def load_vitmae_from_from_pretrained_w_weights(from_pretrained_model_path, weigh
 
     if pretraining:
         model = ViTMAEForPreTraining.from_pretrained(from_pretrained_model_path)
+        if weights_path != 'Scratch':
+            checkpoint = torch.load(weights_path, map_location='cpu')
+            msg = model.load_state_dict(checkpoint, strict=False)
+            print(msg)
+        else:
+            config_file = model.config
+            model_from_config = ViTMAEForPreTraining._from_config(config_file)
+            model = model_from_config
     elif classification:
         model = ViTForImageClassification.from_pretrained(from_pretrained_model_path, num_labels=classes)
-
-    checkpoint = torch.load(weights_path, map_location='cpu')
-    msg = model.load_state_dict(checkpoint, strict=False)
-    print(msg)
+        if weights_path != 'Scratch':
+            checkpoint = torch.load(weights_path, map_location='cpu')
+            msg = model.load_state_dict(checkpoint, strict=False)
+            print(msg)
+        else:
+            config_file = model.config
+            model_from_config = ViTForImageClassification._from_config(config_file)
+            model = model_from_config
 
     return feature_extractor, model
 

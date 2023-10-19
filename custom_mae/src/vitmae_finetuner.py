@@ -56,13 +56,17 @@ if __name__ == '__main__':
 
     num_rand_images = None
 
-    if from_pretrained_model != None and model_checkpoint == None:
+    if from_pretrained_model != 'None' and model_checkpoint == 'None':
         print('We are loading in the model with from_pretrained.')
-
         feature_extractor, model = load_vitmae_from_from_pretrained(from_pretrained_model, True, False, None)
         dataset = prepare_dataset_reconstruction(data_dir, col, args.val_pct, num_rand_images)
 
-    elif from_pretrained_model != None and model_checkpoint != None:
+    elif from_pretrained_model != 'None' and model_checkpoint == 'Scratch':
+        print('We are loading in an INITIALIZED model with the correct architecture. This is NOT fine-tuned.')
+        feature_extractor, model = load_vitmae_from_from_pretrained_w_weights(from_pretrained_model, model_checkpoint, True, False, None)
+        dataset = prepare_dataset_reconstruction(data_dir, col, args.val_pct, num_rand_images)
+
+    elif from_pretrained_model != 'None' and model_checkpoint != 'None':
         print('We are loading in the model with from_pretrained and the swapping out the weights.')
         feature_extractor, model = load_vitmae_from_from_pretrained_w_weights(from_pretrained_model, model_checkpoint, True, False, None)
         dataset = prepare_dataset_reconstruction(data_dir, col, args.val_pct, num_rand_images)
