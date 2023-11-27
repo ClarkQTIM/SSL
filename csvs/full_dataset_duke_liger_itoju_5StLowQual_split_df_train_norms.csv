@@ -1,0 +1,4 @@
+,Data Origin,Date,Means,Standard_Deviations
+0,/sddata/projects/Cervical_Cancer_Projects/cervical_cancer/csvs/full_dataset_duke_liger_split_df.csv,2023-11-13 20:44:00,0.411,0.235
+1,/sddata/projects/Cervical_Cancer_Projects/cervical_cancer/csvs/full_dataset_duke_liger_split_df.csv,2023-11-13 20:44:00,0.276,0.195
+2,/sddata/projects/Cervical_Cancer_Projects/cervical_cancer/csvs/full_dataset_duke_liger_split_df.csv,2023-11-13 20:44:00,0.217,0.185
