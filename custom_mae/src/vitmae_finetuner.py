@@ -80,6 +80,8 @@ if __name__ == '__main__':
         inputs = feature_extractor([x for x in example_batch['image']], return_tensors='pt') # The same as above, but for everything in the batch
 
         return inputs
+    
+    print(f'Feature extractor {feature_extractor}')
 
     prepared_dataset = transform_dataset(dataset, feat_extract_transform)
     train_ds = prepared_dataset['train']
