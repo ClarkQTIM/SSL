@@ -1,3 +1,8 @@
+# Description of Repository
+The goal of this repository is to explore several different Self-Supervised Learning Algorithms.
+
+As such, it is a collection of other repos, custom SSL algorithms, and SSL training outputs.
+
 # Setting up the Virtual Environment
 ## Create Environment
 ```

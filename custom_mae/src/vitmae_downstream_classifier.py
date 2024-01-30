@@ -63,11 +63,11 @@ if __name__ == '__main__':
         print('We are loading in the model architecture from from_pretrained and also replacing the weights.')
 
         feature_extractor, model = load_vitmae_from_from_pretrained_w_weights(from_pretrained_model, model_checkpoint, False, True, 3)
+        sys.exit()
         dataset = prepare_ds_from_csv_and_image_dir(args.data_dir, args.data_csv, args.image_col, args.label_col)
 
     else:
         print(f'There is an issue somewhere. The from_pretrained is {from_pretrained_model}, the architecture is {model_arch}, and the checkpoint is {model_checkpoint}.')
-
 
     def feat_extract_transform(example_batch):
         # Take a list of PIL images and turn them to pixel values

@@ -95,6 +95,9 @@ def load_vitmae_from_from_pretrained_w_weights(from_pretrained_model_path, weigh
     elif classification:
         model = ViTForImageClassification.from_pretrained(from_pretrained_model_path, num_labels=classes)
         if weights_path != 'Scratch':
+            '''
+            This could be cleaned up so we only load in the encoder and we don't have such a long error message.
+            '''
             checkpoint = torch.load(weights_path, map_location='cpu')
             msg = model.load_state_dict(checkpoint, strict=False)
             print(msg)
@@ -155,9 +158,22 @@ def prepare_dataset_reconstruction(data_location, image_col, val_pct, num_rand_i
 
     if '.csv' not in data_location:
         all_images = os.listdir(data_location)
+        print(f'Num images before removing test {len(all_images)}')
+        '''
+        Hardcoding. Remove later
+        '''
+        csv_of_images_not_to_include = pd.read_csv('/sddata/projects/SSL/custom_mae/csvs/model_36_split_df_test1_only.csv')
+        images_not_to_include = list(csv_of_images_not_to_include['MASKED_IMG_ID'])
+        print(images_not_to_include[:5])
+        all_images = [image for image in all_images if image not in images_not_to_include]
         all_images = [os.path.join(data_location, image) for image in all_images]
+        print(f'Num images after removing test {len(all_images)}')
     else:
         all_images = list(pd.read_csv(data_location)[image_col])
+        '''
+        Hardcoded. Remove
+        '''
+        all_images = [os.path.join('/sddata/projects/Cervical_Cancer_Projects/data/full_dataset/full_dataset_duke_liger_itoju_5StLowQual', image) for image in all_images] # Hardcoded for now. remove!
 
     if num_rand_images is not None:
         all_images = random.sample(all_images, num_rand_images)
@@ -329,73 +345,3 @@ def visualize(epoch, pixel_values, model, feature_extractor, show, save, dir_to_
         else:
 
             plt.savefig(os.path.join(dir_to_save, title + '_visualization.png'))
-
-########
-# Legacy
-########
-
-
-# def process_image(image_path, feature_extractor, img_size, means, stand_devs):
-#     try:
-#         if image_path.lower().endswith((".jpg", ".jpeg", ".png", ".bmp", ".gif", ".tif")):
-#             if feature_extractor is not None:
-#                 image = PImage.open(image_path)
-#                 try:
-#                     pixel_values = feature_extractor(image, return_tensors="pt").pixel_values
-#                 except:
-#                     print(f'Feature extractor failed on this image {image_path}')
-#                     return None, None
-#             else:
-#                 pixel_values = feature_extraction_single_image_from_given_params(image_path, img_size, means, stand_devs)
-#                 pixel_values = torch.tensor(pixel_values).to(torch.float32)
-#                 pixel_values = pixel_values.unsqueeze(dim=0)
-#                 pixel_values = torch.einsum('nhwc->nchw', pixel_values)
-
-#                 return pixel_values, image_path
-#         else:
-#             return None, None
-#     except (PIL.UnidentifiedImageError, OSError) as e:
-#         print(f"Error processing {image_path}: {e}")
-#         return None, None
-
-# def prepare_dataset_from_dir_parallel(data_location, image_column, feature_extractor, img_size, means, stand_devs, num_rand_images):
-
-#     if '.csv' not in data_location:
-#         all_images = os.listdir(data_location)
-#         all_images = [os.path.join(data_location, image) for image in all_images]
-#     else:
-#         all_images = list(pd.read_csv(data_location)[image_column])
-
-#     if num_rand_images is not None:
-#         all_images = random.sample(all_images, num_rand_images)
-
-#     valid_results = []
-
-#     with concurrent.futures.ThreadPoolExecutor() as executor:
-#         futures = [executor.submit(process_image, image_path, feature_extractor, img_size, means, stand_devs) for image_path in all_images]
-
-#         for future in concurrent.futures.as_completed(futures):
-#             result = future.result()
-#             if result[0] is not None:
-#                 valid_results.append(result)
-
-#     # Separate pixel values and image paths
-#     dataset_pixel_values, valid_image_paths = zip(*valid_results)
-
-#     print(f'There are {len(dataset_pixel_values)} images. Example of an image path: {all_images[0]}')
-
-#     return list(dataset_pixel_values), list(valid_image_paths)
-
-# def feat_extract_transform(example_batch, feature_extractor):
-
-    '''
-    Technically, we need to define this after creating the feature extractor, but we will keep the template here.
-    '''
-#     # Take a list of PIL images and turn them to pixel values
-#     inputs = feature_extractor([x for x in example_batch['image']], return_tensors='pt') # The same as above, but for everything in the batch
-
-#     # Don't forget to include the labels if we need them!
-#     inputs['label'] = example_batch['label']
-
-#     return inputs
-

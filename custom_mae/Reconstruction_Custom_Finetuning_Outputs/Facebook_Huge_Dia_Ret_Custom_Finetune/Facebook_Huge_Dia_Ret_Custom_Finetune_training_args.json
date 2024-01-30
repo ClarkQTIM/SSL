@@ -1,1 +1,0 @@
-{"Dataset": "/sddata/projects/SSL/custom_mae/csvs/dr_training_images.csv", "Image_Column": "Image", "Model_Type": "facebook/vit-mae-huge", "Model_Arch": "None", "Checkpoint": "None", "Batch_Size": 16, "Epochs": 25, "Learning_Rate": 6.25e-05, "Scheduler": "LinearLR", "Val_Pct": 0.15, "Seed": 0}

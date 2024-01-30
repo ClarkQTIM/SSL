@@ -17,7 +17,6 @@ import models_mae
 from utils import *
 from vitmae_finetune import *
 
-
 ########################
 # Full training pipeline
 ########################
@@ -56,6 +55,10 @@ if __name__ == '__main__':
 
     num_rand_images = None
 
+    '''
+    REMOVE THE ADDITION IN prepare_dataset_reconstruction
+    '''
+
     if from_pretrained_model != 'None' and model_checkpoint == 'None':
         print('We are loading in the model with from_pretrained.')
         feature_extractor, model = load_vitmae_from_from_pretrained(from_pretrained_model, True, False, None)
@@ -75,13 +78,32 @@ if __name__ == '__main__':
         print('Issue loading in model for fine-tuning. Check arguments')
         sys.exit()
 
+    # Setting up the custom means and standard deviations for normalization
+    if args.means != 'None':
+        mean_list = args.means.split("_")
+        mean_list = [float(x) for x in mean_list]
+
+    if args.stand_devs != 'None':
+        std_list = args.stand_devs.split("_")
+        std_list = [float(x) for x in std_list]
+        print(f'We are creating a new feature extractor with means {args.means} and standard deviations {args.stand_devs}')
+        new_feature_extractor = ViTFeatureExtractor(
+        do_normalize=feature_extractor.do_normalize,
+        do_rescale=feature_extractor.do_rescale,
+        do_resize=feature_extractor.do_resize,
+        image_mean=mean_list,
+        image_std=std_list,
+        resample=feature_extractor.resample,
+        rescale_factor=feature_extractor.rescale_factor,
+        size=feature_extractor.size
+        )
+        feature_extractor = new_feature_extractor
+
     def feat_extract_transform(example_batch):
         # Take a list of PIL images and turn them to pixel values
         inputs = feature_extractor([x for x in example_batch['image']], return_tensors='pt') # The same as above, but for everything in the batch
 
         return inputs
-    
-    print(f'Feature extractor {feature_extractor}')
 
     prepared_dataset = transform_dataset(dataset, feat_extract_transform)
     train_ds = prepared_dataset['train']
@@ -97,26 +119,39 @@ if __name__ == '__main__':
     if not os.path.exists(args.model_directory):
         os.makedirs(args.model_directory)
 
+    for name, param in model.named_parameters():
+            param_name = name
+            param_data = param.data
+            # print(f"\nPre-trained Parameter: {param_name}")
+            # print(param_data[0][0][0])
+            break
+
     training_args = {
         "Dataset": args.dataset,
         "Image_Column": args.col,
         "Model_Type": args.model_type,
         "Model_Arch": args.model_arch,
+        "Means": args.means,
+        "STDS": args.stand_devs,
         "Checkpoint": args.model_checkpt,
         "Batch_Size": args.batch_size,
         "Epochs": args.epochs,
         "Learning_Rate": args.learning_rate,
         "Scheduler": 'LinearLR', # Hardcoded for now
         "Val_Pct": args.val_pct,
-        "Seed": args.seed
+        "Seed": args.seed,
+        "Param_Name": param_name,
+        "Param_data": str(param_data[0][0][0]),
+        "Train_num": len(train_ds),
+        "Val_num": len(val_ds)
     }
     savepath = os.path.join(args.model_directory, args.title + "_training_args.json")
     with open(savepath, "w") as f:
         json.dump(training_args, f)
 
     # # Saving the csv used to train
-    # dataset = pd.read_csv(args.dataset)
-    # dataset.to_csv(args.model_directory + args.dataset.split('/')[-1])
+    dataset = pd.read_csv(args.dataset)
+    dataset.to_csv(args.model_directory + args.dataset.split('/')[-1])
 
     # Training
     trainer = Train(model,

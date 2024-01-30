@@ -43,6 +43,22 @@ def create_dia_ret_csv(data_dir, save_path1, save_path2):
     data_df = pd.DataFrame(data_dict)
     data_df.to_csv(save_path2)
 
+def create_dr_train_val_csv(train_dir, val_dir, save_path):
+
+    train_images = os.listdir(train_dir)
+    train_images = [os.path.join(train_dir, image) for image in train_images]
+    train_split = ['train'] * len(train_images)
+
+    val_images = os.listdir(val_dir)
+    val_images = [os.path.join(val_dir, image) for image in val_images]
+    val_split = ['val'] * len(val_images)
+
+    splits = train_split + val_split
+    all_images = train_images + val_images
+
+    csv_dict = {'Image':all_images, 'Split': splits}
+    csv_df = pd.DataFrame(csv_dict)
+    csv_df.to_csv(save_path)
 
 ####################
 # Running the Script
@@ -61,7 +77,12 @@ if __name__ == '__main__':
     # for extension in image_extensions:
     #     image_paths.extend(glob.glob(os.path.join(root_directory, '**', extension), recursive=True))
 
-    data_dir = '/sddata/projects/SSL/data/diabetic_retinopathy_detection/'
-    save_path1 = '/sddata/projects/SSL/custom_mae/csvs/all_dr_images.csv'
-    save_path2 = '/sddata/projects/SSL/custom_mae/csvs/dr_training_images.csv'
-    create_dia_ret_csv(data_dir, save_path1, save_path2)
+    # data_dir = '/sddata/projects/SSL/data/diabetic_retinopathy_detection/'
+    # save_path1 = '/sddata/projects/SSL/custom_mae/csvs/all_dr_images.csv'
+    # save_path2 = '/sddata/projects/SSL/custom_mae/csvs/dr_training_images.csv'
+    # create_dia_ret_csv(data_dir, save_path1, save_path2)
+
+    train_dir = '/sddata/data/retina_datasets/diabetic_retinopathy_detection/data_with_labels_train_val/train'
+    val_dir = '/sddata/data/retina_datasets/diabetic_retinopathy_detection/data_with_labels_train_val/val'
+    save_path = '/sddata/projects/SSL/custom_mae/csvs/dia_ret_train_val_only.csv'
+    create_dr_train_val_csv(train_dir, val_dir, save_path)
