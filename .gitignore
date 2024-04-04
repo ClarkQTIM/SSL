@@ -2,6 +2,8 @@
 /mae_hf
 /transformers
 /segmentation
+/moco-v3
+/dino
 /data
 /custom_mae/Reconstruction_HuggingFace_Finetuning_Models
 *.pth
