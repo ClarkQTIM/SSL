@@ -97,6 +97,7 @@ def normalization_stats_from_dir(images_origin, dir_to_find_images, image_col, s
         #     current_val_dir = dir_to_find_images
         #     image_path = os.path.join(current_val_dir, image_path.split('/')[-1])
         #     image_paths.append(image_path)
+
     print(len(image_paths))
     # Means and Standard Deviations
     mean_channels, std_channels, num_images = calculate_mean_std(image_paths)
@@ -108,9 +109,9 @@ def normalization_stats_from_dir(images_origin, dir_to_find_images, image_col, s
 
 if __name__ == "__main__":
 
-    data_dir = '/sddata/projects/Cervical_Cancer_Projects/cervical_cancer/csvs/model_36_split_df_all_gt.csv'
-    dir_to_find_images = '/sddata/projects/Cervical_Cancer_Projects/data/full_dataset_duke_liger_train_val/train'
-    # save_path = '/sddata/projects/SSL/csvs/cervix_full_dataset_all_but_test1_norms.csv'
-    save_path = 'None'
+    data_dir = '/sddata/projects/Cervical_Cancer_Projects/cervical_cancer_diagnosis/csvs/SEED/SEED_w_model_36_splits.csv'
+    dir_to_find_images = '/sddata/projects/Cervical_Cancer_Projects/data/SEED/'
+    save_path = '/sddata/projects/SSL/csvs/SEED_train_only_norms.csv'
+    # save_path = 'None'
 
     normalization_stats_from_dir(data_dir, dir_to_find_images, 'MASKED_IMG_ID', 'dataset', 'train', 'val', save_path)

@@ -1,0 +1,4 @@
+,Data Origin,Date,Num_Images,Means,Standard_Deviations
+0,/sddata/projects/Cervical_Cancer_Projects/cervical_cancer_diagnosis/csvs/SEED/SEED_w_model_36_splits.csv,2024-04-06 20:55:37,5669,0.411,0.235
+1,/sddata/projects/Cervical_Cancer_Projects/cervical_cancer_diagnosis/csvs/SEED/SEED_w_model_36_splits.csv,2024-04-06 20:55:37,5669,0.276,0.195
+2,/sddata/projects/Cervical_Cancer_Projects/cervical_cancer_diagnosis/csvs/SEED/SEED_w_model_36_splits.csv,2024-04-06 20:55:37,5669,0.217,0.185
