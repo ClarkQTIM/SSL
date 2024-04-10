@@ -1,0 +1,5 @@
+{
+    "Num_Images": 6593,
+    "Param_Name": "cls_token",
+    "str(param_data[0][0][0])": "tensor(0.0051)"
+}
