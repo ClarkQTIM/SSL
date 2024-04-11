@@ -10,7 +10,7 @@
 
 module purge
 module load anaconda
-conda activate cclark_env
+conda activate cclark_dl4
 
 python main_dino.py \
     --arch dino_vitb16 \
