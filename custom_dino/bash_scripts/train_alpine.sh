@@ -21,4 +21,4 @@ python main_dino.py \
     --global_crops_scale 0.14 1 \
     --local_crops_scale 0.05 0.14 \
     --data_path /home/cclark@xsede.org/SSL/csvs/datasets/all_cervix_images_up_to_03262024_no_seed_test_test2_alpine.csv \
-    --output_dir /home/cclark@xsede.org/SSL/dino/finetuning/testing
+    --output_dir /projects/cclark@xsede.org/SSL/dino/finetuning/testing

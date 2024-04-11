@@ -692,6 +692,7 @@ class DataAugmentationDINO(object):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser('DINO', parents=[get_args_parser()])
     args = parser.parse_args()
+    print(args)
     Path(args.output_dir).mkdir(parents=True, exist_ok=True)
 
     #############
