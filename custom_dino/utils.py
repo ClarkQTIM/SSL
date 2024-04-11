@@ -489,7 +489,6 @@ def init_distributed_mode(args):
         sys.exit(1)
 
     print(f'rank, gpu, and world_size: {args.rank, args.gpu, args.world_size}')
-    sys.exit()
 
     dist.init_process_group(
         backend="nccl",
