@@ -476,6 +476,7 @@ def init_distributed_mode(args):
         print("'SLURM_PROCID' in os.environ")
         args.rank = int(os.environ['SLURM_PROCID'])
         args.gpu = args.rank % torch.cuda.device_count()
+        args.world_size = int(os.environ['SLURM_NTASKS'])
     # launched naively with `python main_dino.py`
     # we manually add MASTER_ADDR and MASTER_PORT to env variables
     elif torch.cuda.is_available():
@@ -486,6 +487,9 @@ def init_distributed_mode(args):
     else:
         print('Does not support training without GPU.')
         sys.exit(1)
+
+    print(f'rank, gpu, and world_size: {args.rank, args.gpu, args.world_size}')
+    sys.exit()
 
     dist.init_process_group(
         backend="nccl",
