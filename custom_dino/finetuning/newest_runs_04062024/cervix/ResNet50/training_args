@@ -30,7 +30,7 @@
         0.14
     ],
     "data_path": "/sddata/projects/SSL/csvs/datasets/all_cervix_images_up_to_03262024_no_seed_test_test2.csv",
-    "output_dir": "/sddata/projects/SSL/dino/finetuning/newest_runs_04062024/cervix/ResNet50",
+    "output_dir": "/sddata/projects/SSL/custom_dino/finetuning/newest_runs_04062024/cervix/ResNet50",
     "saveckp_freq": 20,
     "seed": 0,
     "num_workers": 10,

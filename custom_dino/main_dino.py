@@ -66,6 +66,7 @@ class CustomImageFolder(datasets.ImageFolder):
 
 class CustomImageDatasetFromCSV(Dataset):
     def __init__(self, csv_file, transform=None):
+        # self.data_frame = pd.read_csv(csv_file).sample(1000).reset_index(drop=True)
         self.data_frame = pd.read_csv(csv_file)
         self.transform = transform
 
@@ -270,6 +271,9 @@ def train_dino(args):
         data_df = pd.read_csv(args.data_path)
         print(f'We have {len(data_df)} images from a csv')
         dataset = CustomImageDatasetFromCSV(args.data_path, transform=transform)
+    else:
+        print('Issue with dataset. Exiting')
+        sys.exit()
 
     sampler = torch.utils.data.DistributedSampler(dataset, shuffle=True)
     data_loader = torch.utils.data.DataLoader(
@@ -470,7 +474,6 @@ def train_dino(args):
         # print(param_data[0][0][0])
         break
 
-
     start_time = time.time()
     print("Starting DINO training !")
     for epoch in range(start_epoch, args.epochs):
@@ -482,7 +485,7 @@ def train_dino(args):
             epoch, fp16_scaler, args)
 
         # Save the best loss
-        current_loss = train_stats['train_loss']
+        current_loss = train_stats['loss']
         if current_loss < best_loss:
             best_loss = current_loss
             epochs_without_improvement = 0
@@ -516,7 +519,6 @@ def train_dino(args):
     total_time = time.time() - start_time
     total_time_str = str(datetime.timedelta(seconds=int(total_time)))
     print('Training time {}'.format(total_time_str))
-
 
 def train_one_epoch(student, teacher, teacher_without_ddp, dino_loss, data_loader,
                     optimizer, lr_schedule, wd_schedule, momentum_schedule,epoch,
@@ -651,7 +653,7 @@ class DataAugmentationDINO(object):
             # transforms.Normalize((0.485, 0.456, 0.406), (0.229, 0.224, 0.225)), # ImageNet means and standard deviations
             # transforms.Normalize((0.466, 0.353, 0.327), (0.246, 0.211, 0.217)), # From /sddata/projects/SSL/csvs/full_dataset_duke_liger_itoju_5StLowQual_norms.csv
             # transforms.Normalize((0.313, 0.223, 0.164), (0.306, 0.222, 0.176)) # From /sddata/projects/SSL/csvs/dia_ret_full_training_dataset_norms.csv
-            # transforms.Normalize((0.313, 0.222, 0.164), (0.306, 0.222, 0.176)) # From /sddata/projects/SSL/csvs/dia_ret_split_df_training_norms.csv
+            # transforms.Normalize((0.313, 0.222, 0.164), (0.306, 0.222, 0.176)) # From /sddata/projects/SSL/csvs/norms/all_dr_images_no_test_train_only.csv
             transforms.Normalize((0.411, 0.276, 0.217), (0.236, 0.195, 0.185)) # From /sddata/projects/SSL/csvs/SEED_train_only_norms.csv
             # transforms.Normalize((0.474, 0.362, 0.34), (0.245, 0.209, 0.215)) # From /sddata/projects/SSL/csvs/cervix_full_dataset_all_but_test1_norms.csv
         ])

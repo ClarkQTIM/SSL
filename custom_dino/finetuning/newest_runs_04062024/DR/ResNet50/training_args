@@ -30,7 +30,7 @@
         0.14
     ],
     "data_path": "/sddata/projects/SSL/csvs/datasets/all_dr_images_no_test.csv",
-    "output_dir": "/sddata/projects/SSL/dino/finetuning/newest_runs_04062024/DR/ResNet50",
+    "output_dir": "/sddata/projects/SSL/custom_dino/finetuning/newest_runs_04062024/DR/ResNet50",
     "saveckp_freq": 20,
     "seed": 0,
     "num_workers": 10,

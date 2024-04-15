@@ -81,16 +81,17 @@ def normalization_stats_from_dir(images_origin, dir_to_find_images, image_col, s
     else:
         print('Reading from csv')
         data_df = pd.read_csv(images_origin)
-        train_data_df = data_df[(data_df[split_col] == train_label)]
+        train_data_df = data_df[(data_df[split_col] == train_label)][image_col]
         val_data_df = data_df[(data_df[split_col] == val_label)]
-        image_paths = []
+        image_paths = train_data_df
+        print(image_paths)
         # image_paths = list(train_data_df[image_col])
 
-        for i in range(len(train_data_df)):
-            image_path = list(train_data_df[image_col])[i]
-            current_train_dir = dir_to_find_images
-            image_path = os.path.join(current_train_dir, image_path.split('/')[-1])
-            image_paths.append(image_path)
+        # for i in range(len(train_data_df)):
+        #     image_path = list(train_data_df[image_col])[i]
+        #     current_train_dir = dir_to_find_images
+        #     image_path = os.path.join(current_train_dir, image_path.split('/')[-1])
+        #     image_paths.append(image_path)
 
         # for i in range(len(val_data_df)):
         #     image_path = list(val_data_df[image_col])[i]
@@ -109,9 +110,9 @@ def normalization_stats_from_dir(images_origin, dir_to_find_images, image_col, s
 
 if __name__ == "__main__":
 
-    data_dir = '/sddata/projects/Cervical_Cancer_Projects/cervical_cancer_diagnosis/csvs/SEED/SEED_w_model_36_splits.csv'
+    data_dir = '/sddata/projects/SSL/csvs/datasets/all_dr_images_no_test.csv'
     dir_to_find_images = '/sddata/projects/Cervical_Cancer_Projects/data/SEED/'
-    save_path = '/sddata/projects/SSL/csvs/SEED_train_only_norms.csv'
+    save_path = '/sddata/projects/SSL/csvs/norms/all_dr_images_no_test_train_only.csv'
     # save_path = 'None'
 
-    normalization_stats_from_dir(data_dir, dir_to_find_images, 'MASKED_IMG_ID', 'dataset', 'train', 'val', save_path)
+    normalization_stats_from_dir(data_dir, dir_to_find_images, 'image', 'split', 'train', 'val', save_path)

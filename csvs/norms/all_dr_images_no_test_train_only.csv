@@ -1,0 +1,4 @@
+,Data Origin,Date,Num_Images,Means,Standard_Deviations
+0,/sddata/projects/SSL/csvs/datasets/all_dr_images_no_test.csv,2024-04-12 03:09:16,28100,0.313,0.306
+1,/sddata/projects/SSL/csvs/datasets/all_dr_images_no_test.csv,2024-04-12 03:09:16,28100,0.222,0.222
+2,/sddata/projects/SSL/csvs/datasets/all_dr_images_no_test.csv,2024-04-12 03:09:16,28100,0.164,0.176

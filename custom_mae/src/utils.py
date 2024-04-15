@@ -152,6 +152,10 @@ def create_dataset_image_only(image_paths):
 def prepare_dataset_reconstruction(data_location, image_col, val_pct, num_rand_images):
 
     '''
+    4/12: Prep this and run
+    '''
+
+    '''
     In this function, we don't have dedicated train and val sets, but are going to use ALL the data we can, either from a csv or 
     from a directory.
     '''
@@ -173,7 +177,7 @@ def prepare_dataset_reconstruction(data_location, image_col, val_pct, num_rand_i
         '''
         Hardcoded. Remove
         '''
-        all_images = [os.path.join('/sddata/projects/Cervical_Cancer_Projects/data/full_dataset/full_dataset_duke_liger_itoju_5StLowQual', image) for image in all_images] # Hardcoded for now. remove!
+        # all_images = [os.path.join('/sddata/projects/Cervical_Cancer_Projects/data/full_dataset/full_dataset_duke_liger_itoju_5StLowQual', image) for image in all_images] # Hardcoded for now. remove!
 
     if num_rand_images is not None:
         all_images = random.sample(all_images, num_rand_images)
