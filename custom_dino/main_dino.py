@@ -264,6 +264,8 @@ def train_dino(args):
     with open(save_training_args_path, "w") as json_file:
         json.dump(transform_dict, json_file, indent=4)
 
+    print(args.data_path)
+
     if os.path.isdir(args.data_path):
         print(f'Number of items in the data path: {len(os.listdir(args.data_path))}')
         dataset = CustomImageFolder(args.data_path, transform=transform)
