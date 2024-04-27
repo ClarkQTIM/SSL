@@ -76,11 +76,16 @@ class CustomImageDatasetFromCSV(Dataset):
     def __getitem__(self, idx):
         ImageFile.LOAD_TRUNCATED_IMAGES = True
         img_path = self.data_frame['image'].loc[idx]
-        try:
-            img = Image.open(img_path).convert('RGB')
-        except OSError as e:
-            print(f"Error loading image at path: {img_path}. OSError: {e}")
-            img = Image.new('RGB', (224, 224), (0, 0, 0))
+        
+        if img_path.endswith('.npy'):
+            # Load numpy array
+            image = np.load(img_path)
+        else:
+            try:
+                img = Image.open(img_path).convert('RGB')
+            except OSError as e:
+                print(f"Error loading image at path: {img_path}. OSError: {e}")
+                img = Image.new('RGB', (224, 224), (0, 0, 0))
 
         if self.transform is not None:
             img = self.transform(img)

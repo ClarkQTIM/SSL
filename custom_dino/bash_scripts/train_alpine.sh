@@ -6,7 +6,7 @@
 #SBATCH --gres=gpu:1
 #SBATCH --ntasks=10
 #SBATCH --output=cclark_dino_cervix.%j.out
-#SBATCH --error=cclark_dino_cervix%.err
+#SBATCH --error=cclark_dino_cervix.%j.err
 
 module purge
 module load anaconda

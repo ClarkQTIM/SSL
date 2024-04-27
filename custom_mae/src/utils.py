@@ -116,14 +116,24 @@ def create_dataset_image_label(image_paths, label_paths):
     valid_label_paths = []
 
     for i in range(len(image_paths)): # Sometimes the images paths don't open, so we need to weed those out
-        try:
-            img = PImage.open(image_paths[i])
-            img.verify()
-            img.close()  # Close the image to release resources
-            valid_image_paths.append(image_paths[i])
-            valid_label_paths.append(label_paths[i])
-        except Exception as e:
-            print(f"Error opening image '{image_paths[i]}': {e}")
+        if image_path.endswith('.npy'):
+            try:
+                img = np.load(image_path)
+                img.verify()
+                img.close()  # Close the image to release resources
+                valid_image_paths.append(image_paths[i])
+                valid_label_paths.append(label_paths[i])
+            except Exception as e:
+                print(f"Error opening image '{image_paths[i]}': {e}")        
+        else:    
+            try:
+                img = PImage.open(image_paths[i])
+                img.verify()
+                img.close()  # Close the image to release resources
+                valid_image_paths.append(image_paths[i])
+                valid_label_paths.append(label_paths[i])
+            except Exception as e:
+                print(f"Error opening image '{image_paths[i]}': {e}")
 
     dataset = Dataset.from_dict({"image": sorted(valid_image_paths),
                                 "label": sorted(valid_label_paths)})
@@ -136,13 +146,24 @@ def create_dataset_image_only(image_paths):
     valid_image_paths = []
 
     for image_path in image_paths:
-        try:
-            img = PImage.open(image_path)
-            img.verify()  # Check for image validity without fully loading it
-            img.close()    # Close the image to release resources
-            valid_image_paths.append(image_path)
-        except Exception as e:
-            print(f"Error opening/verifying image '{image_path}': {e}")
+        if image_path.endswith('.npy'):
+            try:
+                img = np.load(image_path)
+                img.verify()
+                img.close()  # Close the image to release resources
+                valid_image_paths.append(image_paths[i])
+                valid_label_paths.append(label_paths[i])
+            except Exception as e:
+                print(f"Error opening image '{image_paths[i]}': {e}")        
+        else:    
+            try:
+                img = PImage.open(image_paths[i])
+                img.verify()
+                img.close()  # Close the image to release resources
+                valid_image_paths.append(image_paths[i])
+                valid_label_paths.append(label_paths[i])
+            except Exception as e:
+                print(f"Error opening image '{image_paths[i]}': {e}")
 
     dataset = Dataset.from_dict({"image": sorted(valid_image_paths)})
     dataset = dataset.cast_column("image", Image())
@@ -174,11 +195,7 @@ def prepare_dataset_reconstruction(data_location, image_col, val_pct, num_rand_i
         print(f'Num images after removing test {len(all_images)}')
     else:
         all_images = list(pd.read_csv(data_location)[image_col])
-        '''
-        Hardcoded. Remove
-        '''
-        # all_images = [os.path.join('/sddata/projects/Cervical_Cancer_Projects/data/full_dataset/full_dataset_duke_liger_itoju_5StLowQual', image) for image in all_images] # Hardcoded for now. remove!
-
+        
     if num_rand_images is not None:
         all_images = random.sample(all_images, num_rand_images)
 
