@@ -29,7 +29,7 @@ EPOCHS=50
 LR=6.25e-05
 VIS=5
 SAVE_DIR=/projects/cclark@xsede.org/SSL/custom_mae/Reconstruction_Custom_Finetuning_Outputs/Cervix_04122024/ViTMAE_Base_Cervix_all_data_no_test_test2_cont_cont/
-TITLE=ViTMAE_Base_Cervix_all_data_but_test_test2
+TITLE=ViTMAE_Base_Cervix_all_data_but_test_test2_cont_cont
 GPUS=0
 SEED=0
 
