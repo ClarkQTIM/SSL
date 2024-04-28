@@ -1,7 +1,7 @@
 #!/bin/bash
 #SBATCH --nodes=1
-#SBATCH --time=24:00:00
-#SBATCH --partition=aa100
+#SBATCH --time=00:59:00
+#SBATCH --partition=atesting_a100
 #SBATCH --job-name=cclark_dino_cervix
 #SBATCH --gres=gpu:1
 #SBATCH --ntasks=10
