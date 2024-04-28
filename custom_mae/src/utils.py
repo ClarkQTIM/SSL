@@ -152,7 +152,6 @@ def create_dataset_image_only(image_paths):
                 img.verify()
                 img.close()  # Close the image to release resources
                 valid_image_paths.append(image_path)
-                valid_label_paths.append(label_path)
             except Exception as e:
                 print(f"Error opening image '{image_path}': {e}")        
         else:    
@@ -161,7 +160,6 @@ def create_dataset_image_only(image_paths):
                 img.verify()
                 img.close()  # Close the image to release resources
                 valid_image_paths.append(image_path)
-                valid_label_paths.append(label_path)
             except Exception as e:
                 print(f"Error opening image '{image_path}': {e}")
 
