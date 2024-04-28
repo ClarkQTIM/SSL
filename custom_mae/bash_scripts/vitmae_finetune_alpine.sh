@@ -12,7 +12,6 @@ module purge
 module load anaconda
 conda activate cclark_dl4
 
-
 MODEL_TYPE=facebook/vit-mae-base
 MODEL_ARCH=None
 MODEL_CHECKPOINT=/projects/cclark@xsede.org/SSL/custom_mae/Reconstruction_Custom_Finetuning_Best_Models/ViTMAE_Base_Cervix_all_data_but_test_test2_cont_best_epoch.pth
