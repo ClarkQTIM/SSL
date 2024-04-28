@@ -11,6 +11,7 @@
 module purge
 module load anaconda
 conda activate cclark_dl4
+conda install datasets
 
 MODEL_TYPE=facebook/vit-mae-base
 MODEL_ARCH=None
