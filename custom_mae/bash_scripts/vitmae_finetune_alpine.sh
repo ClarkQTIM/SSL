@@ -2,7 +2,7 @@
 #SBATCH --nodes=1
 #SBATCH --time=00:59:00
 #SBATCH --partition=atesting_a100
-#SBATCH --job-name=cclark_dino_cervix
+#SBATCH --job-name=cclark_vitmae_cervix
 #SBATCH --gres=gpu:1
 #SBATCH --ntasks=10
 #SBATCH --output=cclark_vitmae_cervix.%j.out
