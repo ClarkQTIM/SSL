@@ -151,19 +151,19 @@ def create_dataset_image_only(image_paths):
                 img = np.load(image_path)
                 img.verify()
                 img.close()  # Close the image to release resources
-                valid_image_paths.append(image_paths[i])
-                valid_label_paths.append(label_paths[i])
+                valid_image_paths.append(image_path)
+                valid_label_paths.append(label_path)
             except Exception as e:
-                print(f"Error opening image '{image_paths[i]}': {e}")        
+                print(f"Error opening image '{image_path}': {e}")        
         else:    
             try:
-                img = PImage.open(image_paths[i])
+                img = PImage.open(image_path)
                 img.verify()
                 img.close()  # Close the image to release resources
-                valid_image_paths.append(image_paths[i])
-                valid_label_paths.append(label_paths[i])
+                valid_image_paths.append(image_path)
+                valid_label_paths.append(label_path)
             except Exception as e:
-                print(f"Error opening image '{image_paths[i]}': {e}")
+                print(f"Error opening image '{image_path}': {e}")
 
     dataset = Dataset.from_dict({"image": sorted(valid_image_paths)})
     dataset = dataset.cast_column("image", Image())
