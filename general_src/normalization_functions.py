@@ -28,7 +28,8 @@ def find_file_path(root_directory, target_file_name):
 
 def calculate_mean_std_parallel(img_path):
     try:
-        img = Image.open(img_path)
+        # img = Image.open(img_path)
+        img = np.load(img_path)
         img_array = np.array(img) / 255.0  # Normalize pixel values to [0, 1]
         shape = img_array.shape
         sum_channels = np.sum(img_array, axis=(0, 1))
@@ -110,9 +111,9 @@ def normalization_stats_from_dir(images_origin, dir_to_find_images, image_col, s
 
 if __name__ == "__main__":
 
-    data_dir = '/sddata/projects/SSL/csvs/datasets/all_dr_images_no_test.csv'
+    data_dir = '/sddata/projects/SSL/csvs/datasets/dmist_train_only.csv'
     dir_to_find_images = '/sddata/projects/Cervical_Cancer_Projects/data/SEED/'
-    save_path = '/sddata/projects/SSL/csvs/norms/all_dr_images_no_test_train_only.csv'
+    save_path = '/sddata/projects/SSL/csvs/norms/dmist_train_only.csv'
     # save_path = 'None'
 
-    normalization_stats_from_dir(data_dir, dir_to_find_images, 'image', 'split', 'train', 'val', save_path)
+    normalization_stats_from_dir(data_dir, dir_to_find_images, 'Image', 'dataset', 'train', 'val', save_path)
