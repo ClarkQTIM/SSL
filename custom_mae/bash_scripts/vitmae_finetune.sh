@@ -1,6 +1,6 @@
 MODEL_TYPE=facebook/vit-mae-base
 MODEL_ARCH=None
-MODEL_CHECKPOINT=/sddata/projects/SSL/custom_mae/Reconstruction_Custom_Finetuning_Best_Models/ViTMAE_Base_Cervix_all_data_but_test_test2_best_epoch.pth
+MODEL_CHECKPOINT=/sddata/projects/SSL/custom_mae/Reconstruction_Custom_Finetuning_Best_Models/ViTMAE_Base_Cervix_all_data_but_test_test2_cont_best_epoch.pth
 MEANS=0.411_0.276_0.217
 STAND_DEVS=0.236_0.195_0.185
 SIZE=224
@@ -14,8 +14,8 @@ BATCH=16
 EPOCHS=29
 LR=6.25e-05
 VIS=5
-SAVE_DIR=/sddata/projects/SSL/custom_mae/Reconstruction_Custom_Finetuning_Outputs/Cervix_04122024_cont/ViTMAE_Base_Cervix_all_data_no_test_test2/
-TITLE=ViTMAE_Base_Cervix_all_data_but_test_test2_cont
+SAVE_DIR=/sddata/projects/SSL/custom_mae/Reconstruction_Custom_Finetuning_Outputs/Cervix_04122024_cont_cont_/ViTMAE_Base_Cervix_all_data_no_test_test2/
+TITLE=ViTMAE_Base_Cervix_all_data_but_test_test2_cont_cont
 GPUS=0
 SEED=0
 
