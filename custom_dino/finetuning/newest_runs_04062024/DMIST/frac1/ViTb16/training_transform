@@ -1,0 +1,6 @@
+{
+    "global_transfo1": "Compose(\n    RandomResizedCrop(size=(224, 224), scale=(0.14, 1.0), ratio=(0.75, 1.3333), interpolation=bicubic)\n    Compose(\n    RandomHorizontalFlip(p=0.5)\n)\n    <utils.GaussianBlur object at 0x7d8abc306580>\n    Compose(\n    ToTensor()\n    Normalize(mean=(0.325, 0.325, 0.325), std=(0.402, 0.402, 0.402))\n)\n)",
+    "global_transfo2": "Compose(\n    RandomResizedCrop(size=(224, 224), scale=(0.14, 1.0), ratio=(0.75, 1.3333), interpolation=bicubic)\n    Compose(\n    RandomHorizontalFlip(p=0.5)\n)\n    <utils.GaussianBlur object at 0x7d8abc306400>\n    Compose(\n    ToTensor()\n    Normalize(mean=(0.325, 0.325, 0.325), std=(0.402, 0.402, 0.402))\n)\n)",
+    "local_crops_number": "8",
+    "local_transfo": "Compose(\n    RandomResizedCrop(size=(96, 96), scale=(0.05, 0.14), ratio=(0.75, 1.3333), interpolation=bicubic)\n    Compose(\n    RandomHorizontalFlip(p=0.5)\n)\n    <utils.GaussianBlur object at 0x7d8abc3062b0>\n    Compose(\n    ToTensor()\n    Normalize(mean=(0.325, 0.325, 0.325), std=(0.402, 0.402, 0.402))\n)\n)"
+}

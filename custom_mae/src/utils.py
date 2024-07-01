@@ -11,18 +11,22 @@ import matplotlib.pyplot as plt
 import random
 import PIL
 import concurrent.futures
+import sys
 
 # DL
 import torch
 import torch.nn as nn
 import transformers
 from transformers import ViTFeatureExtractor, ViTMAEForPreTraining, ViTForImageClassification
-from monai.data import DataLoader
-from datasets import Dataset, DatasetDict, Image
+from torch.utils.data import Dataset
+from datasets import DatasetDict, Image
 from torch.utils.data import random_split
 
 # Python Scripts
 import models_mae
+
+# Image manipulation
+from PIL import Image, ImageOps, ImageFile
 
 ###########
 # Functions
@@ -119,8 +123,6 @@ def create_dataset_image_label(image_paths, label_paths):
         if image_path.endswith('.npy'):
             try:
                 img = np.load(image_path)
-                img.verify()
-                img.close()  # Close the image to release resources
                 valid_image_paths.append(image_paths[i])
                 valid_label_paths.append(label_paths[i])
             except Exception as e:
@@ -149,8 +151,6 @@ def create_dataset_image_only(image_paths):
         if image_path.endswith('.npy'):
             try:
                 img = np.load(image_path)
-                img.verify()
-                img.close()  # Close the image to release resources
                 valid_image_paths.append(image_path)
             except Exception as e:
                 print(f"Error opening image '{image_path}': {e}")        
@@ -168,103 +168,54 @@ def create_dataset_image_only(image_paths):
 
     return dataset
 
-def prepare_dataset_reconstruction(data_location, image_col, val_pct, num_rand_images):
+def get_train_val_splits(data_location, val_pct, num_rand_images):
 
-    '''
-    4/12: Prep this and run
-    '''
+    df = pd.read_csv(data_location)
 
-    '''
-    In this function, we don't have dedicated train and val sets, but are going to use ALL the data we can, either from a csv or 
-    from a directory.
-    '''
-
-    if '.csv' not in data_location:
-        all_images = os.listdir(data_location)
-        print(f'Num images before removing test {len(all_images)}')
-        '''
-        Hardcoding. Remove later
-        '''
-        csv_of_images_not_to_include = pd.read_csv('/sddata/projects/SSL/custom_mae/csvs/model_36_split_df_test1_only.csv')
-        images_not_to_include = list(csv_of_images_not_to_include['MASKED_IMG_ID'])
-        print(images_not_to_include[:5])
-        all_images = [image for image in all_images if image not in images_not_to_include]
-        all_images = [os.path.join(data_location, image) for image in all_images]
-        print(f'Num images after removing test {len(all_images)}')
-    else:
-        all_images = list(pd.read_csv(data_location)[image_col])
-        
     if num_rand_images is not None:
-        all_images = random.sample(all_images, num_rand_images)
+        df = df.sample(n=num_rand_images)
+        df.reset_index(drop=True, inplace=True)
 
-    dataset_size = len(all_images)
-    val_size = int(val_pct * dataset_size)
-    train_size = dataset_size - val_size
+    # Sample a percentage of the DataFrame for validation
+    val_df = df.sample(frac=val_pct, random_state=42)  # You can specify a random state for reproducibility
 
-    image_paths_train, image_paths_validation = random_split(all_images, [train_size, val_size])
+    # The rest of the data will be used for training
+    train_df = df.drop(val_df.index)
 
-    # step 1: create Dataset objects
-    train_dataset = create_dataset_image_only(image_paths_train)
-    validation_dataset = create_dataset_image_only(image_paths_validation)
+    val_df.reset_index(drop=True, inplace=True)
+    train_df.reset_index(drop=True, inplace=True)
 
-    # step 2: create DatasetDict
-    dataset = DatasetDict({
-        "train": train_dataset,
-        "val": validation_dataset,
-    }
-    )
+    return train_df, val_df
 
-    return dataset
+class CustomImageDatasetFromCSV(Dataset):
+    def __init__(self, data_frame, transform=None):
+        self.data_frame = data_frame
+        self.transform = transform
 
-# Organize dataset from csv and data path
+    def __len__(self):
+        return len(self.data_frame)
 
-def prepare_ds_from_csv_and_image_dir(image_dir, csv_path, image_col, label_col):
-
-    '''
-    This function is for when we have a csv with images and labels and where the images are the image names only, not the full paths.
-    (like Rakin's splits_df.csv for the diagnostic classifier).
-
-    10/2: Add in when you get the chance a train and val splitting portion in case we don't have them already.
-    '''
-
-    ds_df = pd.read_csv(csv_path)
-
-    # Filter rows where 'dataset' is 'train'
-    train_df = ds_df[ds_df['dataset'] == 'train']
-
-    # Filter rows where 'dataset' is 'val'
-    val_df = ds_df[ds_df['dataset'] == 'val']
-
-    # Extract the 'image' column from each DataFrame to get lists of image names
-    image_paths_train = train_df[image_col].tolist()
-    label_paths_train = train_df[label_col].tolist()
-
-    if image_dir != 'None':
-        image_paths_train = [os.path.join(image_dir, name) for name in image_paths_train]
-
-    image_paths_validation = val_df[image_col].tolist()
-    label_paths_validation = val_df[label_col].tolist()
-    if image_dir != 'None':
-        image_paths_validation = [os.path.join(image_dir, name) for name in image_paths_validation]
-
-    # step 1: create Dataset objects
-    train_dataset = create_dataset_image_label(image_paths_train, label_paths_train)
-    validation_dataset = create_dataset_image_label(image_paths_validation, label_paths_validation)
-
-    # step 2: create DatasetDict
-    dataset = DatasetDict({
-        "train": train_dataset,
-        "val": validation_dataset,
-    }
-    )
-
-    return dataset
-
-def transform_dataset(dataset, transformation):
-
-    prepared_ds = dataset.with_transform(transformation)
-
-    return prepared_ds
+    def __getitem__(self, idx):
+        ImageFile.LOAD_TRUNCATED_IMAGES = True
+        img_path = self.data_frame.loc[idx]['image']
+        
+        if img_path.endswith('.npy'):
+            # Load numpy array
+            img = np.load(img_path)
+            img = np.uint8(255*img)
+            img = Image.fromarray(img, 'RGB')
+        else:
+            try:
+                img = Image.open(img_path).convert('RGB')
+            except OSError as e:
+                print(f"Error loading image at path: {img_path}. OSError: {e}")
+                img = Image.new('RGB', (224, 224), (0, 0, 0))
+        if self.transform is not None:
+            img = self.transform(img)
+        
+        # Since this is for self-supervised learning, we don't need to provide target labels
+        # We can just return None or any arbitrary value as the "target" or nothing at all
+        return img
 
 # Loss Over Dataset (Also in /sddata/projects/SSL/custom_mae/src/vitmae_loss_over_dataset.py)
 

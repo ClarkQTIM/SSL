@@ -9,6 +9,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from PIL import Image
 import time
+import sys
 
 # DL
 import torch
@@ -67,7 +68,11 @@ class Train:
                 ## Stepping through the batches
                 for batch_data in self.train_dataloader: # Ranging over the batches
                     step += 1 # Counting the batches
-                    input = batch_data['pixel_values']
+                    try:
+                        input = batch_data['pixel_values'][0]
+                    except:
+                        print(batch_data)
+                        sys.exit()
                     optimizer.zero_grad() # Zeroing out the optimizer gradients
 
                     if self.mask_ratio != None:
@@ -103,7 +108,8 @@ class Train:
 
                         for batch_data in self.val_dataloader: # Running through the validation dataset batches
                             val_step += 1 # Counting the batches
-                            val_input = batch_data['pixel_values']
+                            
+                            val_input = batch_data['pixel_values'][0]
 
                             if self.mask_ratio != None:
                                 loss, y, mask = self.model(val_input.to(self.base_device), mask_ratio=self.mask_ratio)
@@ -136,6 +142,10 @@ class Train:
                 ### Weight saving
                 if val_loss_values[-1] == np.min(val_loss_values): # Checking if this epoch has the lowest validation. If so, we save it.
                     savepath = '/sddata/projects/SSL/custom_mae/Reconstruction_Custom_Finetuning_Best_Models/' + self.title + "_best_epoch.pth"
+
+                    '''
+                    Make this dynamic with a better save path for the model
+                    '''
                     print("savepath: ", savepath)
                     torch.save(self.model.state_dict(), savepath)
                     print("saved model")

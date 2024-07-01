@@ -1,0 +1,5 @@
+{
+    "Num_Images": 71976,
+    "Param_Name": "efficientnet.embeddings.convolution.weight",
+    "str(param_data[0][0][0])": "tensor([0.0208, 0.0347, 0.0283])"
+}

@@ -32,12 +32,16 @@ import torch.nn.functional as F
 import torchvision
 from torchvision import datasets, transforms
 from torchvision import models as torchvision_models
+import matplotlib.pyplot as plt
+from torchvision.utils import make_grid
 import monai
 
 import utils
 import vision_transformer as vits
 from vision_transformer import DINOHead
 from torch.utils.data import Dataset
+from torchvision.models import efficientnet_v2_s, efficientnet_v2_m, EfficientNet_V2_S_Weights, EfficientNet_V2_M_Weights
+from transformers import EfficientNetImageProcessor, EfficientNetForImageClassification
 
 
 class CustomImageFolder(datasets.ImageFolder):
@@ -47,9 +51,15 @@ class CustomImageFolder(datasets.ImageFolder):
     def pil_loader(self, path):
         try:
             # Attempt to open the image, and skip if it's unreadable or corrupted
-            with open(path, 'rb') as f:
-                with Image.open(f) as img:
-                    return img.convert('RGB')
+            if path.endswith('.npy'):
+                # Load numpy array
+                img = np.load(img_path)
+                img = np.uint8(255*img)
+                return Image.fromarray(image, 'RGB')
+            else:
+                with open(path, 'rb') as f:
+                    with Image.open(f) as img:
+                        return img.convert('RGB')
         except (IOError, OSError):
             return None
 
@@ -79,14 +89,15 @@ class CustomImageDatasetFromCSV(Dataset):
         
         if img_path.endswith('.npy'):
             # Load numpy array
-            image = np.load(img_path)
+            img = np.load(img_path)
+            img = np.uint8(255*img)
+            img = Image.fromarray(img, 'RGB')
         else:
             try:
                 img = Image.open(img_path).convert('RGB')
             except OSError as e:
                 print(f"Error loading image at path: {img_path}. OSError: {e}")
                 img = Image.new('RGB', (224, 224), (0, 0, 0))
-
         if self.transform is not None:
             img = self.transform(img)
         
@@ -149,7 +160,7 @@ def get_args_parser():
 
     # Model parameters
     parser.add_argument('--arch', default='vit_small', type=str,
-        choices=['dino_vitb16', 'dino_vitb8', 'densenet121_pt', 'dino_resnet50','vit_tiny', 'vit_small', 'vit_base', 'xcit', 'deit_tiny', 'deit_small'] \
+        choices=['dino_vitb16', 'dino_vitb8', 'densenet121_pt', 'dino_resnet50', 'eff_v2_s', 'eff_hf', 'vit_tiny', 'vit_small', 'vit_base', 'xcit', 'deit_tiny', 'deit_small'] \
                 + torchvision_archs + torch.hub.list("facebookresearch/xcit:main"),
         help="""Name of architecture to train. For quick experiments with ViTs,
         we recommend using vit_tiny or vit_small.""") # Added dino_resnet50
@@ -374,8 +385,48 @@ def train_dino(args):
                 # print(param_data[0][0][0])
                 break
 
+    elif args.arch == 'eff_v2_s':
+        student = efficientnet_v2_s(
+            weights=EfficientNet_V2_S_Weights.IMAGENET1K_V1)
+        teacher = efficientnet_v2_s(
+            weights=EfficientNet_V2_S_Weights.IMAGENET1K_V1)
+
+        student.classifier = nn.Identity()
+        teacher.classifier = nn.Identity()
+        embed_dim = 1280
+
+        # Print the values of the parameters for the first few layers to confirm this is correct
+        for name, param in student.named_parameters():
+                param_name = name
+                param_data = param.data
+                # print(f"\nPre-trained Parameter: {param_name}")
+                # print(param_data[0][0][0])
+                break
+
+    elif args.arch == 'eff_hf':
+        student = EfficientNetForImageClassification.from_pretrained("google/efficientnet-b0")
+        teacher = EfficientNetForImageClassification.from_pretrained("google/efficientnet-b0")
+        
+        student.classifier = nn.Identity()
+        teacher.classifier = nn.Identity()
+        embed_dim = 1280
+
+        # Print the values of the parameters for the first few layers to confirm this is correct
+        for name, param in student.named_parameters():
+                param_name = name
+                param_data = param.data
+                # print(f"\nPre-trained Parameter: {param_name}")
+                # print(param_data[0][0][0])
+                break
+
     else:
-        print(f"Unknown architecture: {args.arch}")
+        raise ValueError(f"Unknown architecture: {args.arch}")
+
+    # Saving model architecture
+    with open(os.path.join(args.output_dir, 'model_arch.txt'), 'w') as f:
+        sys.stdout = f
+        print(student)
+        sys.stdout = sys.__stdout__  # Reset stdout to its original state
 
     # sys.exit()
 
@@ -489,7 +540,7 @@ def train_dino(args):
         # ============ training one epoch of DINO ... ============
         train_stats = train_one_epoch(student, teacher, teacher_without_ddp, dino_loss,
             data_loader, optimizer, lr_schedule, wd_schedule, momentum_schedule,
-            epoch, fp16_scaler, args)
+            epoch, fp16_scaler, args, args.output_dir)
 
         # Save the best loss
         current_loss = train_stats['loss']
@@ -527,12 +578,92 @@ def train_dino(args):
     total_time_str = str(datetime.timedelta(seconds=int(total_time)))
     print('Training time {}'.format(total_time_str))
 
+import matplotlib.pyplot as plt
+from torchvision.utils import make_grid
+
+def save_views(images, save_dir):
+    os.makedirs(save_dir, exist_ok=True)
+    global_views = images[:2]
+    local_views = images[2:]
+
+    for i, view in enumerate(global_views):
+        grid_img = make_grid(view, nrow=4, normalize=True)
+        plt.figure(figsize=(10, 10))
+        plt.imshow(grid_img.permute(1, 2, 0).cpu().numpy())
+        plt.axis('off')
+        plt.title(f'Global Views')
+        plt.savefig(os.path.join(save_dir, 'Global_Views.png'))
+        plt.close()
+
+    for i, view in enumerate(local_views):
+        grid_img = make_grid(view, nrow=4, normalize=True)
+        plt.figure(figsize=(10, 10))
+        plt.imshow(grid_img.permute(1, 2, 0).cpu().numpy())
+        plt.axis('off')
+        plt.title('Local Views')
+        plt.savefig(os.path.join(save_dir, 'Local_Views.png'))
+        plt.close()
+
+def save_single_image_views(images, save_dir, target_size=(224, 224)):
+    os.makedirs(save_dir, exist_ok=True)
+    global_views = images[:2]
+    local_views = images[2:]
+
+    # Define a resize transform
+    resize_transform = transforms.Resize(target_size)
+
+    # Extract the first rows of global and local views
+    global_row = [view[:1] for view in global_views]
+    local_row_1 = [view[:1] for view in local_views[0::2]]
+    local_row_2 = [view[:1] for view in local_views[1::2]]
+
+    # Resize local rows to match the target size
+    local_row_1_resized = [resize_transform(view.squeeze(0)).unsqueeze(0) for view in local_row_1]
+    local_row_2_resized = [resize_transform(view.squeeze(0)).unsqueeze(0) for view in local_row_2]
+
+    # Create grids for each row
+    global_grid = make_grid(torch.cat(global_row), nrow=len(global_row), normalize=True)
+    local_row_1_grid = make_grid(torch.cat(local_row_1_resized), nrow=len(local_row_1_resized), normalize=True)
+    local_row_2_grid = make_grid(torch.cat(local_row_2_resized), nrow=len(local_row_2_resized), normalize=True)
+
+    # Determine the combined height and width
+    combined_height = global_grid.size(1) + local_row_1_grid.size(1) + local_row_2_grid.size(1)
+    combined_width = max(global_grid.size(2), local_row_1_grid.size(2), local_row_2_grid.size(2))
+    combined_image = torch.ones(3, combined_height, combined_width)
+
+    # Calculate padding for center alignment of global views
+    global_padding = (combined_width - global_grid.size(2)) // 2
+
+    # Place the grids on the combined image
+    y_offset = 0
+    combined_image[:, y_offset:y_offset+global_grid.size(1), global_padding:global_padding+global_grid.size(2)] = global_grid
+    y_offset += global_grid.size(1)
+    combined_image[:, y_offset:y_offset+local_row_1_grid.size(1), :local_row_1_grid.size(2)] = local_row_1_grid
+    y_offset += local_row_1_grid.size(1)
+    combined_image[:, y_offset:y_offset+local_row_2_grid.size(1), :local_row_2_grid.size(2)] = local_row_2_grid
+
+    # Save the combined image
+    plt.figure(figsize=(20, 15))
+    plt.imshow(combined_image.permute(1, 2, 0).cpu().numpy())
+    plt.axis('off')
+    plt.title('Two Global Views and Eight Local Views')
+    plt.savefig(os.path.join(save_dir, 'Global_and_Local_Views.png'))
+    plt.close()
+
+
 def train_one_epoch(student, teacher, teacher_without_ddp, dino_loss, data_loader,
-                    optimizer, lr_schedule, wd_schedule, momentum_schedule,epoch,
-                    fp16_scaler, args):
+                    optimizer, lr_schedule, wd_schedule, momentum_schedule, epoch,
+                    fp16_scaler, args, save_dir):
     metric_logger = utils.MetricLogger(delimiter="  ")
     header = 'Epoch: [{}/{}]'.format(epoch, args.epochs)
     for it, (images, _) in enumerate(metric_logger.log_every(data_loader, 10, header)):
+
+        # Views in the images
+        if epoch == 0 and it == 0:
+            print('We are saving some examples of the views.')
+            save_views(images, save_dir)
+            save_single_image_views(images, save_dir, target_size=(224, 224))
+
         # update weight decay and learning rate according to their schedule
         it = len(data_loader) * epoch + it  # global training iteration
         for i, param_group in enumerate(optimizer.param_groups):
@@ -649,11 +780,11 @@ class DataAugmentationDINO(object):
     def __init__(self, global_crops_scale, local_crops_scale, local_crops_number):
         flip_and_color_jitter = transforms.Compose([
             transforms.RandomHorizontalFlip(p=0.5),
-            transforms.RandomApply(
-                [transforms.ColorJitter(brightness=0.4, contrast=0.4, saturation=0.2, hue=0.1)],
-                p=0.8
-            ),
-            transforms.RandomGrayscale(p=0.2),
+            # transforms.RandomApply(
+            #     [transforms.ColorJitter(brightness=0.4, contrast=0.4, saturation=0.2, hue=0.1)],
+            #     p=0.8
+            # ),
+            # transforms.RandomGrayscale(p=0.2),
         ])
         normalize = transforms.Compose([
             transforms.ToTensor(),
@@ -661,8 +792,9 @@ class DataAugmentationDINO(object):
             # transforms.Normalize((0.466, 0.353, 0.327), (0.246, 0.211, 0.217)), # From /sddata/projects/SSL/csvs/full_dataset_duke_liger_itoju_5StLowQual_norms.csv
             # transforms.Normalize((0.313, 0.223, 0.164), (0.306, 0.222, 0.176)) # From /sddata/projects/SSL/csvs/dia_ret_full_training_dataset_norms.csv
             # transforms.Normalize((0.313, 0.222, 0.164), (0.306, 0.222, 0.176)) # From /sddata/projects/SSL/csvs/norms/all_dr_images_no_test_train_only.csv
-            transforms.Normalize((0.411, 0.276, 0.217), (0.236, 0.195, 0.185)) # From /sddata/projects/SSL/csvs/SEED_train_only_norms.csv
+            # transforms.Normalize((0.411, 0.276, 0.217), (0.235, 0.195, 0.185)) # From /sddata/projects/SSL/csvs/SEED_train_only_norms.csv
             # transforms.Normalize((0.474, 0.362, 0.34), (0.245, 0.209, 0.215)) # From /sddata/projects/SSL/csvs/cervix_full_dataset_all_but_test1_norms.csv
+            transforms.Normalize((0.325, 0.325, 0.325), (0.402, 0.402, 0.402)) # From /sddata/projects/SSL/csvs/datasets/dmist_train_only.csv
         ])
 
         # first global crop
@@ -677,7 +809,7 @@ class DataAugmentationDINO(object):
             transforms.RandomResizedCrop(224, scale=global_crops_scale, interpolation=Image.BICUBIC),
             flip_and_color_jitter,
             utils.GaussianBlur(0.1),
-            utils.Solarization(0.2),
+            # utils.Solarization(0.2),
             normalize,
         ])
         # transformation for the local small crops
@@ -715,4 +847,12 @@ if __name__ == '__main__':
     with open(output_file_path, "w") as json_file:
         json.dump(args_dict, json_file, indent=4)
 
+    # Start the timer and training
+    start = time.time()
     train_dino(args)
+    end = time.time()
+
+    elapsed_time = end - start
+    time_output_file_path = os.path.join(args.output_dir, 'elapsed_time.txt')
+    with open(time_output_file_path, "w") as time_file:
+        time_file.write(f"Elapsed time: {elapsed_time} seconds\n")

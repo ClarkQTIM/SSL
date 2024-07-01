@@ -30,7 +30,7 @@ def calculate_mean_std_parallel(img_path):
     try:
         # img = Image.open(img_path)
         img = np.load(img_path)
-        img_array = np.array(img) / 255.0  # Normalize pixel values to [0, 1]
+        img_array = np.array(img)  # Normalize pixel values to [0, 1]
         shape = img_array.shape
         sum_channels = np.sum(img_array, axis=(0, 1))
         sum_squared_channels = np.sum(img_array ** 2, axis=(0, 1))
@@ -116,4 +116,4 @@ if __name__ == "__main__":
     save_path = '/sddata/projects/SSL/csvs/norms/dmist_train_only.csv'
     # save_path = 'None'
 
-    normalization_stats_from_dir(data_dir, dir_to_find_images, 'Image', 'dataset', 'train', 'val', save_path)
+    normalization_stats_from_dir(data_dir, dir_to_find_images, 'image', 'dataset', 'train', 'val', save_path)

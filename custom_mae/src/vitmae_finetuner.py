@@ -62,21 +62,23 @@ if __name__ == '__main__':
     if from_pretrained_model != 'None' and model_checkpoint == 'None':
         print('We are loading in the model with from_pretrained.')
         feature_extractor, model = load_vitmae_from_from_pretrained(from_pretrained_model, True, False, None)
-        dataset = prepare_dataset_reconstruction(data_dir, col, args.val_pct, num_rand_images)
+        # dataset = prepare_dataset_reconstruction(data_dir, col, args.val_pct, num_rand_images)
 
     elif from_pretrained_model != 'None' and model_checkpoint == 'Scratch':
         print('We are loading in an INITIALIZED model with the correct architecture. This is NOT fine-tuned.')
         feature_extractor, model = load_vitmae_from_from_pretrained_w_weights(from_pretrained_model, model_checkpoint, True, False, None)
-        dataset = prepare_dataset_reconstruction(data_dir, col, args.val_pct, num_rand_images)
+        # dataset = prepare_dataset_reconstruction(data_dir, col, args.val_pct, num_rand_images)
 
     elif from_pretrained_model != 'None' and model_checkpoint != 'None':
         print('We are loading in the model with from_pretrained and the swapping out the weights.')
         feature_extractor, model = load_vitmae_from_from_pretrained_w_weights(from_pretrained_model, model_checkpoint, True, False, None)
-        dataset = prepare_dataset_reconstruction(data_dir, col, args.val_pct, num_rand_images)
+        # dataset = prepare_dataset_reconstruction(data_dir, col, args.val_pct, num_rand_images)
 
     else:
         print('Issue loading in model for fine-tuning. Check arguments')
         sys.exit()
+
+    train_df, val_df = get_train_val_splits(data_dir, args.val_pct, num_rand_images)
 
     # Setting up the custom means and standard deviations for normalization
     if args.means != 'None':
@@ -99,18 +101,11 @@ if __name__ == '__main__':
         )
         feature_extractor = new_feature_extractor
 
-    def feat_extract_transform(example_batch):
-        # Take a list of PIL images and turn them to pixel values
-        inputs = feature_extractor([x for x in example_batch['image']], return_tensors='pt') # The same as above, but for everything in the batch
-
-        return inputs
-
-    prepared_dataset = transform_dataset(dataset, feat_extract_transform)
-    train_ds = prepared_dataset['train']
-    val_ds = prepared_dataset['val']
+    train_ds = CustomImageDatasetFromCSV(train_df, transform=feature_extractor)
+    val_ds = CustomImageDatasetFromCSV(val_df, transform=feature_extractor)
     print(f'We have {len(train_ds)} training examples and {len(val_ds)} validation ones.')
-    train_dataloader = DataLoader(train_ds, batch_size = batch_size, shuffle = False)
-    val_dataloader = DataLoader(val_ds, batch_size = batch_size, shuffle = False)
+    train_dataloader = DataLoader(train_ds, batch_size=batch_size, shuffle=True)
+    val_dataloader = DataLoader(val_ds, batch_size=batch_size, shuffle=False)
 
     # Devices
     base_device = configure_devices(model, args.gpus)

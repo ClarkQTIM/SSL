@@ -1,0 +1,5 @@
+{
+    "Num_Images": 71976,
+    "Param_Name": "features.0.0.weight",
+    "str(param_data[0][0][0])": "tensor([-0.5440, -0.0372,  0.6311])"
+}
