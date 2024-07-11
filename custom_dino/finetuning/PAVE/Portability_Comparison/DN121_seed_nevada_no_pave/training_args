@@ -1,0 +1,49 @@
+{
+    "arch": "densenet121_pt",
+    "patch_size": 16,
+    "out_dim": 65536,
+    "norm_last_layer": true,
+    "momentum_teacher": 0.996,
+    "use_bn_in_head": false,
+    "warmup_teacher_temp": 0.04,
+    "teacher_temp": 0.04,
+    "warmup_teacher_temp_epochs": 0,
+    "use_fp16": true,
+    "weight_decay": 0.0001,
+    "weight_decay_end": 0.0001,
+    "clip_grad": 3.0,
+    "batch_size_per_gpu": 64,
+    "epochs": 100,
+    "freeze_last_layer": 1,
+    "lr": 0.03,
+    "warmup_epochs": 10,
+    "min_lr": 1e-06,
+    "optimizer": "sgd",
+    "drop_path_rate": 0.1,
+    "global_crops_scale": [
+        0.14,
+        1.0
+    ],
+    "local_crops_number": 8,
+    "local_crops_scale": [
+        0.05,
+        0.14
+    ],
+    "norm_mean": [
+        0.411,
+        0.276,
+        0.217
+    ],
+    "norm_std": [
+        0.235,
+        0.195,
+        0.185
+    ],
+    "data_path": "/sddata/projects/Cervical_Cancer_Projects/cervical_cancer_diagnosis/csvs/Beat_Model36/seed_nevada_no_pave.csv",
+    "output_dir": "/sddata/projects/SSL/custom_dino/finetuning/PAVE/Portability_Comparison/DN121_seed_nevada_no_pave",
+    "saveckp_freq": 20,
+    "seed": 0,
+    "num_workers": 10,
+    "dist_url": "env://",
+    "local_rank": 0
+}

@@ -86,6 +86,10 @@ class CustomImageDatasetFromCSV(Dataset):
     def __getitem__(self, idx):
         ImageFile.LOAD_TRUNCATED_IMAGES = True
         img_path = self.data_frame['image'].loc[idx]
+
+        # Replace '/mnt/' with '/sddata/projects/Cervical_Cancer_Projects/'
+        if '/mnt/' in img_path:
+            img_path = img_path.replace('/mnt/', '/sddata/projects/Cervical_Cancer_Projects/')
         
         if img_path.endswith('.npy'):
             # Load numpy array
@@ -233,6 +237,12 @@ def get_args_parser():
         help="""Scale range of the cropped image before resizing, relatively to the origin image.
         Used for small local view cropping of multi-crop.""")
 
+    # Normalization parameters
+    parser.add_argument('--norm_mean', type=float, nargs=3, default=[0.485, 0.456, 0.406],
+                        help="Mean normalization values for the dataset. Default is ImageNet.")
+    parser.add_argument('--norm_std', type=float, nargs=3, default=[0.229, 0.224, 0.225],
+                        help="Standard deviation normalization values for the dataset. Default is ImageNet.")
+
     # Misc
     parser.add_argument('--data_path', default='/path/to/imagenet/train/', type=str,
         help='Please specify path to the ImageNet training data.')
@@ -260,9 +270,11 @@ def train_dino(args):
 
     # ============ preparing data ... ============
     transform = DataAugmentationDINO(
-        args.global_crops_scale,
-        args.local_crops_scale,
-        args.local_crops_number,
+        global_crops_scale=args.global_crops_scale,
+        local_crops_scale=args.local_crops_scale,
+        local_crops_number=args.local_crops_number,
+        norm_mean=args.norm_mean,
+        norm_std=args.norm_std
     )
     
     ##################
@@ -279,8 +291,6 @@ def train_dino(args):
     save_training_args_path = os.path.join(args.output_dir, 'training_transform')
     with open(save_training_args_path, "w") as json_file:
         json.dump(transform_dict, json_file, indent=4)
-
-    print(args.data_path)
 
     if os.path.isdir(args.data_path):
         print(f'Number of items in the data path: {len(os.listdir(args.data_path))}')
@@ -777,7 +787,7 @@ class DINOLoss(nn.Module):
 
 
 class DataAugmentationDINO(object):
-    def __init__(self, global_crops_scale, local_crops_scale, local_crops_number):
+    def __init__(self, global_crops_scale, local_crops_scale, local_crops_number, norm_mean, norm_std):
         flip_and_color_jitter = transforms.Compose([
             transforms.RandomHorizontalFlip(p=0.5),
             # transforms.RandomApply(
@@ -788,13 +798,7 @@ class DataAugmentationDINO(object):
         ])
         normalize = transforms.Compose([
             transforms.ToTensor(),
-            # transforms.Normalize((0.485, 0.456, 0.406), (0.229, 0.224, 0.225)), # ImageNet means and standard deviations
-            # transforms.Normalize((0.466, 0.353, 0.327), (0.246, 0.211, 0.217)), # From /sddata/projects/SSL/csvs/full_dataset_duke_liger_itoju_5StLowQual_norms.csv
-            # transforms.Normalize((0.313, 0.223, 0.164), (0.306, 0.222, 0.176)) # From /sddata/projects/SSL/csvs/dia_ret_full_training_dataset_norms.csv
-            # transforms.Normalize((0.313, 0.222, 0.164), (0.306, 0.222, 0.176)) # From /sddata/projects/SSL/csvs/norms/all_dr_images_no_test_train_only.csv
-            # transforms.Normalize((0.411, 0.276, 0.217), (0.235, 0.195, 0.185)) # From /sddata/projects/SSL/csvs/SEED_train_only_norms.csv
-            # transforms.Normalize((0.474, 0.362, 0.34), (0.245, 0.209, 0.215)) # From /sddata/projects/SSL/csvs/cervix_full_dataset_all_but_test1_norms.csv
-            transforms.Normalize((0.325, 0.325, 0.325), (0.402, 0.402, 0.402)) # From /sddata/projects/SSL/csvs/datasets/dmist_train_only.csv
+            transforms.Normalize(norm_mean, norm_std),
         ])
 
         # first global crop

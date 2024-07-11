@@ -1,0 +1,5 @@
+{
+    "Num_Images": 32409,
+    "Param_Name": "features.conv0.weight",
+    "str(param_data[0][0][0])": "tensor([0.0783, 0.1495, 0.1661, 0.1663, 0.1768, 0.1659, 0.1410])"
+}
